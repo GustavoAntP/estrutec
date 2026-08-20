@@ -4,10 +4,12 @@ const cors = require("cors");
 const sequelize = require("./configuracoes/banco");
 // Modelos
 const Usuario = require("./modelos/Usuario");
+const Projeto = require("./modelos/Projeto");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
 const authRotas = require("./rotas/authRotas");
+const projetoRotas = require("./rotas/projetoRotas");
 
 const app = express();
 
@@ -15,6 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/usuarios", usuarioRotas);
 app.use("/auth", authRotas);
+app.use("/projetos", projetoRotas);
 
 
 
