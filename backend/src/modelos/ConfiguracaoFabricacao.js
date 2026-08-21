@@ -2,8 +2,8 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../configuracoes/banco");
 const Projeto = require("./Projeto");
 
-const ElementoProjeto = sequelize.define(
-  "ElementoProjeto",
+const ConfiguracaoFabricacao = sequelize.define(
+  "ConfiguracaoFabricacao",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -14,78 +14,70 @@ const ElementoProjeto = sequelize.define(
     projeto_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: true,
       references: {
         model: Projeto,
         key: "id",
       },
     },
 
-    linha_origem: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
-    nome_aplicacao: {
-      type: DataTypes.STRING(200),
+    fck_mpa: {
+      type: DataTypes.DECIMAL(6, 2),
       allowNull: false,
     },
 
-    tipo: {
-      type: DataTypes.STRING(50),
+    taxa_armadura_kg_m3: {
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
 
-    secao: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
+    desperdicio_percentual: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+      defaultValue: 0,
     },
 
-    aplicacao: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-    },
-
-    largura: {
-      type: DataTypes.DECIMAL(10, 3),
+    consumo_cimento_kg_m3: {
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
 
-    altura: {
-      type: DataTypes.DECIMAL(10, 3),
+    consumo_areia_m3_m3: {
+      type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
     },
 
-    comprimento: {
-      type: DataTypes.DECIMAL(10, 3),
+    consumo_brita_m3_m3: {
+      type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
     },
 
-    quantidade: {
-      type: DataTypes.INTEGER,
+    consumo_agua_l_m3: {
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
 
-    area_secao: {
+    neoprene_m2_por_viga: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: true,
     },
   },
   {
-    tableName: "elementos_projeto",
+    tableName: "configuracoes_fabricacao",
     timestamps: true,
     createdAt: "criado_em",
     updatedAt: "atualizado_em",
   }
 );
 
-Projeto.hasMany(ElementoProjeto, {
+Projeto.hasOne(ConfiguracaoFabricacao, {
   foreignKey: "projeto_id",
-  as: "elementos",
+  as: "configuracaoFabricacao",
 });
 
-ElementoProjeto.belongsTo(Projeto, {
+ConfiguracaoFabricacao.belongsTo(Projeto, {
   foreignKey: "projeto_id",
   as: "projeto",
 });
 
-module.exports = ElementoProjeto;
+module.exports = ConfiguracaoFabricacao;

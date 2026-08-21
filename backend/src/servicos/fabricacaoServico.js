@@ -1,0 +1,250 @@
+const Projeto = require("../modelos/Projeto");
+const ElementoProjeto = require("../modelos/ElementoProjeto");
+const ConfiguracaoFabricacao = require("../modelos/ConfiguracaoFabricacao");
+
+async function calcularVolumes(projetoId, usuarioId) {
+  const projeto = await Projeto.findOne({
+    where: {
+      id: projetoId,
+      usuario_id: usuarioId,
+    },
+  });
+
+  if (!projeto) {
+    throw new Error("Projeto não encontrado.");
+  }
+
+  const elementos = await ElementoProjeto.findAll({
+    where: {
+      projeto_id: projetoId,
+    },
+    order: [["id", "ASC"]],
+  });
+
+  if (elementos.length === 0) {
+    throw new Error(
+      "O projeto não possui elementos estruturais cadastrados."
+    );
+  }
+
+  let volumeCalculado = 0;
+  let totalPecas = 0;
+  let elementosPendentes = 0;
+
+  const resultados = elementos.map((elemento) => {
+    const largura = Number(elemento.largura);
+    const altura = Number(elemento.altura);
+    const comprimento = Number(elemento.comprimento);
+    const quantidade = Number(elemento.quantidade);
+
+    const secao = elemento.secao
+      ? elemento.secao.toUpperCase()
+      : null;
+
+    totalPecas += quantidade;
+
+    let areaUtilizada = null;
+    let volumeUnitario = null;
+    let volumeTotal = null;
+    let statusCalculo = "CALCULADO";
+
+    if (secao === "RETANGULAR") {
+      areaUtilizada = largura * altura;
+    } else {
+      if (
+        elemento.area_secao === null ||
+        elemento.area_secao === undefined
+      ) {
+        elementosPendentes++;
+
+        statusCalculo = "PENDENTE_AREA_SECAO";
+
+        return {
+          id: elemento.id,
+          nomeAplicacao: elemento.nome_aplicacao,
+          tipo: elemento.tipo,
+          secao: elemento.secao,
+          quantidade,
+          areaUtilizada: null,
+          volumeUnitario: null,
+          volumeTotal: null,
+          statusCalculo,
+        };
+      }
+
+      areaUtilizada = Number(elemento.area_secao);
+    }
+
+    volumeUnitario =
+      areaUtilizada * comprimento;
+
+    volumeTotal =
+      volumeUnitario * quantidade;
+
+    volumeCalculado += volumeTotal;
+
+    return {
+      id: elemento.id,
+      nomeAplicacao: elemento.nome_aplicacao,
+      tipo: elemento.tipo,
+      secao: elemento.secao,
+      quantidade,
+
+      areaUtilizada: Number(
+        areaUtilizada.toFixed(4)
+      ),
+
+      volumeUnitario: Number(
+        volumeUnitario.toFixed(4)
+      ),
+
+      volumeTotal: Number(
+        volumeTotal.toFixed(4)
+      ),
+
+      statusCalculo,
+    };
+  });
+
+  return {
+    projeto: {
+      id: projeto.id,
+      codigo: projeto.codigo,
+      nome: projeto.nome,
+    },
+
+    resumo: {
+      totalRegistros: elementos.length,
+      totalPecas,
+      elementosCalculados:
+        elementos.length - elementosPendentes,
+      elementosPendentes,
+
+      volumeCalculadoM3: Number(
+        volumeCalculado.toFixed(4)
+      ),
+
+      volumeTotalM3:
+        elementosPendentes === 0
+          ? Number(volumeCalculado.toFixed(4))
+          : null,
+    },
+
+    elementos: resultados,
+  };
+}
+
+async function calcularMateriais(projetoId, usuarioId) {
+  const resultadoVolumes = await calcularVolumes(
+    projetoId,
+    usuarioId
+  );
+
+  if (resultadoVolumes.resumo.elementosPendentes > 0) {
+    throw new Error(
+      "Existem elementos sem área de seção definida. Complete os dados antes de calcular os materiais."
+    );
+  }
+
+  const configuracao =
+    await ConfiguracaoFabricacao.findOne({
+      where: {
+        projeto_id: projetoId,
+      },
+    });
+
+  if (!configuracao) {
+    throw new Error(
+      "Configuração de fabricação ainda não cadastrada."
+    );
+  }
+
+  const volume = Number(
+    resultadoVolumes.resumo.volumeTotalM3
+  );
+
+  const desperdicio = Number(
+    configuracao.desperdicio_percentual
+  );
+
+  const fatorDesperdicio =
+    1 + desperdicio / 100;
+
+  const cimento =
+    volume *
+    Number(configuracao.consumo_cimento_kg_m3) *
+    fatorDesperdicio;
+
+  const areia =
+    volume *
+    Number(configuracao.consumo_areia_m3_m3) *
+    fatorDesperdicio;
+
+  const brita =
+    volume *
+    Number(configuracao.consumo_brita_m3_m3) *
+    fatorDesperdicio;
+
+  const agua =
+    volume *
+    Number(configuracao.consumo_agua_l_m3) *
+    fatorDesperdicio;
+
+  const aco =
+    volume *
+    Number(configuracao.taxa_armadura_kg_m3) *
+    fatorDesperdicio;
+
+  const totalVigas =
+    resultadoVolumes.elementos
+      .filter(
+        (elemento) =>
+          elemento.tipo === "VIGA"
+      )
+      .reduce(
+        (total, elemento) =>
+          total + Number(elemento.quantidade),
+        0
+      );
+
+  const neoprenePorViga =
+    configuracao.neoprene_m2_por_viga !== null
+      ? Number(configuracao.neoprene_m2_por_viga)
+      : 0;
+
+  const neoprene =
+    totalVigas * neoprenePorViga;
+
+  return {
+    projeto: resultadoVolumes.projeto,
+
+    parametros: {
+      fckMpa: Number(configuracao.fck_mpa),
+      desperdicioPercentual: desperdicio,
+      taxaArmaduraKgM3: Number(
+        configuracao.taxa_armadura_kg_m3
+      ),
+    },
+
+    resumo: {
+      volumeConcretoM3: volume,
+      totalPecas:
+        resultadoVolumes.resumo.totalPecas,
+      totalVigas,
+    },
+
+    materiais: {
+      cimentoKg: Number(cimento.toFixed(2)),
+      areiaM3: Number(areia.toFixed(4)),
+      britaM3: Number(brita.toFixed(4)),
+      aguaLitros: Number(agua.toFixed(2)),
+      acoKg: Number(aco.toFixed(2)),
+      neopreneM2: Number(neoprene.toFixed(4)),
+    },
+  };
+}
+
+module.exports = {
+  calcularVolumes,
+  calcularMateriais,
+};

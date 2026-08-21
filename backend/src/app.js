@@ -6,6 +6,7 @@ const sequelize = require("./configuracoes/banco");
 const Usuario = require("./modelos/Usuario");
 const Projeto = require("./modelos/Projeto");
 const ElementoProjeto = require("./modelos/ElementoProjeto");
+const ConfiguracaoFabricacao = require("./modelos/ConfiguracaoFabricacao");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");

@@ -180,6 +180,26 @@ async function atualizarElemento(
     throw new Error("Quantidade inválida.");
   }
 
+  let areaSecao = elemento.area_secao;
+
+  if (dados.areaSecao !== undefined) {
+    if (
+      dados.areaSecao !== null &&
+      dados.areaSecao !== ""
+    ) {
+      areaSecao = Number(dados.areaSecao);
+
+      if (
+        !Number.isFinite(areaSecao) ||
+        areaSecao <= 0
+      ) {
+        throw new Error("Área da seção inválida.");
+      }
+    } else {
+      areaSecao = null;
+    }
+  }
+
   await elemento.update({
     nome_aplicacao:
       dados.nomeAplicacao !== undefined
@@ -200,6 +220,8 @@ async function atualizarElemento(
       dados.aplicacao !== undefined
         ? dados.aplicacao?.trim().toUpperCase() || null
         : elemento.aplicacao,
+
+    area_secao: areaSecao,
 
     largura,
     altura,
