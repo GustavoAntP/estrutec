@@ -50,8 +50,28 @@ async function calcularCustos(req, res) {
   }
 }
 
+async function confirmar(req, res) {
+  try {
+    const resultado =
+      await fabricacaoServico.confirmarFabricacao(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json({
+      mensagem: "Fabricação confirmada com sucesso!",
+      ...resultado,
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   calcularVolumes,
   calcularMateriais,
   calcularCustos,
+  confirmar,
 };

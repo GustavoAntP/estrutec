@@ -31,5 +31,7 @@ router.get("/:id/fabricacao/materiais", autenticar, fabricacaoControlador.calcul
 router.get("/:id/fabricacao/precos", autenticar, precoFabricacaoControlador.buscar);
 router.put("/:id/fabricacao/precos", autenticar, precoFabricacaoControlador.salvar);
 router.get("/:id/fabricacao/custos", autenticar, fabricacaoControlador.calcularCustos);
+router.post("/:id/fabricacao/confirmar", autenticar, fabricacaoControlador.confirmar);
+
 
 module.exports = router;

@@ -373,8 +373,44 @@ async function calcularCustos(projetoId, usuarioId) {
   };
 }
 
+async function confirmarFabricacao(projetoId, usuarioId) {
+  const projeto = await Projeto.findOne({
+    where: {
+      id: projetoId,
+      usuario_id: usuarioId,
+    },
+  });
+
+  if (!projeto) {
+    throw new Error("Projeto não encontrado.");
+  }
+
+  // Executa todas as validações necessárias.
+  const resultado = await calcularCustos(
+    projetoId,
+    usuarioId
+  );
+
+  await projeto.update({
+    status: "FABRICACAO_CALCULADA",
+  });
+
+  return {
+    projeto: {
+      id: projeto.id,
+      codigo: projeto.codigo,
+      nome: projeto.nome,
+      status: projeto.status,
+    },
+
+    custoTotalFabricacao:
+      resultado.custoTotalFabricacao,
+  };
+}
+
 module.exports = {
   calcularVolumes,
   calcularMateriais,
   calcularCustos,
+  confirmarFabricacao,
 };
