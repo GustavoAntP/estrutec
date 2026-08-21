@@ -15,5 +15,8 @@ router.delete("/:id", autenticar, projetoControlador.excluir);
 
 router.post("/:id/importar-planilha", autenticar, uploadPlanilha.single("arquivo"), planilhaControlador.importar);
 router.post("/:id/confirmar-importacao", autenticar, elementoProjetoControlador.confirmarImportacao);
+router.get("/:id/elementos", autenticar, elementoProjetoControlador.listar);
+router.put("/:id/elementos/:elementoId", autenticar, elementoProjetoControlador.atualizar);
+
 
 module.exports = router;
