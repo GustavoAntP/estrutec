@@ -7,6 +7,7 @@ const Usuario = require("./modelos/Usuario");
 const Projeto = require("./modelos/Projeto");
 const ElementoProjeto = require("./modelos/ElementoProjeto");
 const ConfiguracaoFabricacao = require("./modelos/ConfiguracaoFabricacao");
+const PrecoFabricacao = require("./modelos/PrecoFabricacao");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");

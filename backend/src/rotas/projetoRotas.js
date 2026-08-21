@@ -6,6 +6,8 @@ const uploadPlanilha = require("../middlewares/uploadPlanilhaMiddleware");
 const elementoProjetoControlador = require("../controladores/elementoProjetoControlador");
 const fabricacaoControlador = require("../controladores/fabricacaoControlador");
 const configuracaoFabricacaoControlador = require("../controladores/configuracaoFabricacaoControlador");
+const precoFabricacaoControlador = require("../controladores/precoFabricacaoControlador");
+
 
 const router = express.Router();
 
@@ -26,5 +28,8 @@ router.get("/:id/fabricacao/configuracao", autenticar, configuracaoFabricacaoCon
 router.put("/:id/fabricacao/configuracao", autenticar, configuracaoFabricacaoControlador.salvar);
 router.get("/:id/fabricacao/materiais", autenticar, fabricacaoControlador.calcularMateriais);
 
+router.get("/:id/fabricacao/precos", autenticar, precoFabricacaoControlador.buscar);
+router.put("/:id/fabricacao/precos", autenticar, precoFabricacaoControlador.salvar);
+router.get("/:id/fabricacao/custos", autenticar, fabricacaoControlador.calcularCustos);
 
 module.exports = router;

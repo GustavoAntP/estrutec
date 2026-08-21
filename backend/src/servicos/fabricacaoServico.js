@@ -1,6 +1,7 @@
 const Projeto = require("../modelos/Projeto");
 const ElementoProjeto = require("../modelos/ElementoProjeto");
 const ConfiguracaoFabricacao = require("../modelos/ConfiguracaoFabricacao");
+const PrecoFabricacao = require("../modelos/PrecoFabricacao");
 
 async function calcularVolumes(projetoId, usuarioId) {
   const projeto = await Projeto.findOne({
@@ -244,7 +245,136 @@ async function calcularMateriais(projetoId, usuarioId) {
   };
 }
 
+async function calcularCustos(projetoId, usuarioId) {
+  const resultadoMateriais = await calcularMateriais(
+    projetoId,
+    usuarioId
+  );
+
+  const precos = await PrecoFabricacao.findOne({
+    where: {
+      projeto_id: projetoId,
+    },
+  });
+
+  if (!precos) {
+    throw new Error(
+      "Preços de fabricação ainda não cadastrados."
+    );
+  }
+
+  const materiais = resultadoMateriais.materiais;
+
+  const custoCimento =
+    materiais.cimentoKg *
+    Number(precos.preco_cimento_kg);
+
+  const custoAreia =
+    materiais.areiaM3 *
+    Number(precos.preco_areia_m3);
+
+  const custoBrita =
+    materiais.britaM3 *
+    Number(precos.preco_brita_m3);
+
+  const custoAgua =
+    materiais.aguaLitros *
+    Number(precos.preco_agua_l);
+
+  const custoAco =
+    materiais.acoKg *
+    Number(precos.preco_aco_kg);
+
+  const custoNeoprene =
+    materiais.neopreneM2 *
+    Number(precos.preco_neoprene_m2);
+
+  const custoTotal =
+    custoCimento +
+    custoAreia +
+    custoBrita +
+    custoAgua +
+    custoAco +
+    custoNeoprene;
+
+  return {
+    projeto: resultadoMateriais.projeto,
+
+    resumo: {
+      volumeConcretoM3:
+        resultadoMateriais.resumo.volumeConcretoM3,
+
+      totalPecas:
+        resultadoMateriais.resumo.totalPecas,
+
+      totalVigas:
+        resultadoMateriais.resumo.totalVigas,
+    },
+
+    materiais: {
+      cimento: {
+        quantidade: materiais.cimentoKg,
+        unidade: "kg",
+        precoUnitario: Number(
+          precos.preco_cimento_kg
+        ),
+        custo: Number(custoCimento.toFixed(2)),
+      },
+
+      areia: {
+        quantidade: materiais.areiaM3,
+        unidade: "m³",
+        precoUnitario: Number(
+          precos.preco_areia_m3
+        ),
+        custo: Number(custoAreia.toFixed(2)),
+      },
+
+      brita: {
+        quantidade: materiais.britaM3,
+        unidade: "m³",
+        precoUnitario: Number(
+          precos.preco_brita_m3
+        ),
+        custo: Number(custoBrita.toFixed(2)),
+      },
+
+      agua: {
+        quantidade: materiais.aguaLitros,
+        unidade: "L",
+        precoUnitario: Number(
+          precos.preco_agua_l
+        ),
+        custo: Number(custoAgua.toFixed(2)),
+      },
+
+      aco: {
+        quantidade: materiais.acoKg,
+        unidade: "kg",
+        precoUnitario: Number(
+          precos.preco_aco_kg
+        ),
+        custo: Number(custoAco.toFixed(2)),
+      },
+
+      neoprene: {
+        quantidade: materiais.neopreneM2,
+        unidade: "m²",
+        precoUnitario: Number(
+          precos.preco_neoprene_m2
+        ),
+        custo: Number(custoNeoprene.toFixed(2)),
+      },
+    },
+
+    custoTotalFabricacao: Number(
+      custoTotal.toFixed(2)
+    ),
+  };
+}
+
 module.exports = {
   calcularVolumes,
   calcularMateriais,
+  calcularCustos,
 };
