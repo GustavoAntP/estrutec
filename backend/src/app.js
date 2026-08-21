@@ -8,6 +8,9 @@ const Projeto = require("./modelos/Projeto");
 const ElementoProjeto = require("./modelos/ElementoProjeto");
 const ConfiguracaoFabricacao = require("./modelos/ConfiguracaoFabricacao");
 const PrecoFabricacao = require("./modelos/PrecoFabricacao");
+const LogisticaProjeto = require("./modelos/LogisticaProjeto");
+const LogisticaTerceirizada = require("./modelos/LogisticaTerceirizada");
+const LogisticaPropria = require("./modelos/LogisticaPropria");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
