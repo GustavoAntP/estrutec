@@ -111,26 +111,6 @@ async function atualizarProjeto(id, dados, usuarioId) {
     }
   }
 
-  let areaSecao = elemento.area_secao;
-
-  if (dados.areaSecao !== undefined) {
-    if (
-      dados.areaSecao !== null &&
-      dados.areaSecao !== ""
-    ) {
-      areaSecao = Number(dados.areaSecao);
-
-      if (
-        !Number.isFinite(areaSecao) ||
-        areaSecao <= 0
-      ) {
-        throw new Error("Área da seção inválida.");
-      }
-    } else {
-      areaSecao = null;
-    }
-  }
-
   await projeto.update({
     codigo: codigo?.trim() ?? projeto.codigo,
     nome: nome?.trim() ?? projeto.nome,
@@ -161,8 +141,6 @@ async function atualizarProjeto(id, dados, usuarioId) {
       observacoes !== undefined
         ? observacoes?.trim() || null
         : projeto.observacoes,
-        
-    area_secao: areaSecao,
   });
 
   return projeto;

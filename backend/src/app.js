@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
@@ -34,7 +35,7 @@ app.get("/", (req, res) => {
   });
 });
 
-const PORTA = 3001;
+const PORTA = process.env.PORT || 3001;
 
 async function iniciarServidor() {
   try {
