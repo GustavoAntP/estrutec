@@ -1,0 +1,96 @@
+const Projeto = require("../modelos/Projeto");
+const LogisticaProjeto = require(
+  "../modelos/LogisticaProjeto"
+);
+
+async function verificarProjeto(projetoId, usuarioId) {
+  const projeto = await Projeto.findOne({
+    where: {
+      id: projetoId,
+      usuario_id: usuarioId,
+    },
+  });
+
+  if (!projeto) {
+    throw new Error("Projeto não encontrado.");
+  }
+
+  return projeto;
+}
+
+async function salvarLogistica(
+  projetoId,
+  usuarioId,
+  dados
+) {
+  await verificarProjeto(projetoId, usuarioId);
+
+  const tipoFrete = String(
+    dados.tipoFrete || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  const tiposPermitidos = [
+    "PROPRIO",
+    "TERCEIRIZADO",
+  ];
+
+  if (!tiposPermitidos.includes(tipoFrete)) {
+    throw new Error(
+      "Tipo de frete inválido. Utilize PROPRIO ou TERCEIRIZADO."
+    );
+  }
+
+  let logistica = await LogisticaProjeto.findOne({
+    where: {
+      projeto_id: projetoId,
+    },
+  });
+
+  const dadosLogistica = {
+    tipo_frete: tipoFrete,
+
+    observacoes:
+      dados.observacoes !== undefined
+        ? dados.observacoes?.trim() || null
+        : logistica?.observacoes || null,
+  };
+
+  if (logistica) {
+    await logistica.update(dadosLogistica);
+  } else {
+    logistica = await LogisticaProjeto.create({
+      projeto_id: projetoId,
+      ...dadosLogistica,
+    });
+  }
+
+  return logistica;
+}
+
+async function buscarLogistica(
+  projetoId,
+  usuarioId
+) {
+  await verificarProjeto(projetoId, usuarioId);
+
+  const logistica = await LogisticaProjeto.findOne({
+    where: {
+      projeto_id: projetoId,
+    },
+  });
+
+  if (!logistica) {
+    throw new Error(
+      "Logística ainda não configurada para este projeto."
+    );
+  }
+
+  return logistica;
+}
+
+module.exports = {
+  salvarLogistica,
+  buscarLogistica,
+};
