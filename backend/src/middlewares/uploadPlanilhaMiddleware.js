@@ -3,6 +3,7 @@ const path = require("path");
 
 const armazenamento = multer.memoryStorage();
 
+//Rejeição de arquivo no Multer sem handler global no Express retorna HTML de erro 500 sem payload JSON.
 const filtroArquivo = (req, arquivo, callback) => {
   const extensao = path.extname(arquivo.originalname).toLowerCase();
 

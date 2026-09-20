@@ -72,6 +72,7 @@ async function buscarProjetoPorId(id, usuarioId) {
   return projeto;
 }
 
+//ReferenceError: elemento is not defined quebra a rota PUT / projetos /: id.O bloco de código de elementoProjetoServico.js foi colado por engano dentro da atualização do projeto.
 async function atualizarProjeto(id, dados, usuarioId) {
   const projeto = await Projeto.findOne({
     where: {
@@ -161,13 +162,14 @@ async function atualizarProjeto(id, dados, usuarioId) {
       observacoes !== undefined
         ? observacoes?.trim() || null
         : projeto.observacoes,
-        
+
     area_secao: areaSecao,
   });
 
   return projeto;
 }
 
+//Falta de exclusão em cascata gera ForeignKeyConstraintError no PostgreSQL ao tentar excluir projetos que possuam elementos, configurações ou logística.
 async function excluirProjeto(id, usuarioId) {
   const projeto = await Projeto.findOne({
     where: {

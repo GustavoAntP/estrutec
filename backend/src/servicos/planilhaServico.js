@@ -1,5 +1,6 @@
 const ExcelJS = require("exceljs");
 
+//Células com fórmulas no Excel retornam objetos { formula, result } no ExcelJS e são descartadas como null, ignorando linhas inteiras da planilha.
 function converterNumero(valor) {
   if (typeof valor === "number") {
     return valor;
@@ -18,6 +19,7 @@ function converterNumero(valor) {
   return null;
 }
 
+//Pilares sem a palavra "RETANGULAR" no nome viram "OUTRA", gerando status "PENDENTE_AREA_SECAO" e bloqueando o cálculo de materiais em 
 function identificarElemento(nome) {
   const texto = String(nome).trim().toUpperCase();
 
