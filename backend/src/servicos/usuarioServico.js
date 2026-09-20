@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 const Usuario = require("../modelos/Usuario");
+const { cpfValido } = require("../utilitarios/validadores");
 
 async function cadastrarUsuario(dados) {
   const { nome, cpf, email, senha } = dados;
@@ -14,6 +15,10 @@ async function cadastrarUsuario(dados) {
 
   if (cpfLimpo.length !== 11) {
     throw new Error("CPF deve conter 11 números.");
+  }
+
+ if (!cpfValido(cpfLimpo)) {
+   throw new Error("CPF inválido.");
   }
 
   const emailNormalizado = email.trim().toLowerCase();
