@@ -45,4 +45,8 @@ router.put("/:id/logistica/terceirizada", autenticar, logisticaTerceirizadaContr
 router.get("/:id/logistica/propria", autenticar, logisticaPropriaControlador.buscar);
 router.put("/:id/logistica/propria", autenticar, logisticaPropriaControlador.salvar);
 
+router.get("/:id/logistica/propria/custos", autenticar, logisticaPropriaControlador.calcularCusto);
+
+router.get("/:id/logistica/propria/sugestao-viagens", autenticar, logisticaPropriaControlador.sugerirViagens);
+
 module.exports = router;

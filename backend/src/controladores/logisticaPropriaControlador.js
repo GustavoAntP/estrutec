@@ -41,7 +41,41 @@ async function buscar(req, res) {
   }
 }
 
+async function calcularCusto(req, res) {
+  try {
+    const resultado =
+      await logisticaPropriaServico.calcularCustoFreteProprio(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json(resultado);
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function sugerirViagens(req, res) {
+  try {
+    const resultado =
+      await logisticaPropriaServico.sugerirQuantidadeViagens(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json(resultado);
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   salvar,
   buscar,
+  calcularCusto,
+  sugerirViagens,
 };

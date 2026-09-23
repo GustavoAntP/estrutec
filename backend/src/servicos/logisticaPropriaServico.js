@@ -5,6 +5,9 @@ const LogisticaProjeto = require(
 const LogisticaPropria = require(
   "../modelos/LogisticaPropria"
 );
+const ElementoProjeto = require(
+  "../modelos/ElementoProjeto"
+);
 
 async function obterLogistica(
   projetoId,
@@ -287,7 +290,300 @@ async function buscarLogisticaPropria(
   return freteProprio;
 }
 
+async function calcularCustoFreteProprio(
+  projetoId,
+  usuarioId
+) {
+  const logistica = await obterLogistica(
+    projetoId,
+    usuarioId
+  );
+
+  const freteProprio =
+    await LogisticaPropria.findOne({
+      where: {
+        logistica_id: logistica.id,
+      },
+    });
+
+  if (!freteProprio) {
+    throw new Error(
+      "Dados do frete próprio ainda não cadastrados."
+    );
+  }
+
+  const distanciaIda = Number(
+    freteProprio.distancia_ida_km
+  );
+
+  const viagens = Number(
+    freteProprio.quantidade_viagens
+  );
+
+  const consumoCarregado = Number(
+    freteProprio.consumo_carregado_km_l
+  );
+
+  const consumoVazio = Number(
+    freteProprio.consumo_vazio_km_l
+  );
+
+  const precoDiesel = Number(
+    freteProprio.preco_diesel_l
+  );
+
+  // Todas as viagens de ida são consideradas carregadas.
+  const kmCarregado =
+    distanciaIda * viagens;
+
+  // O retorno é considerado vazio quando ida/volta estiver ativo.
+  const kmVazio =
+    freteProprio.considerar_ida_volta
+      ? distanciaIda * viagens
+      : 0;
+
+  const kmTotal =
+    kmCarregado + kmVazio;
+
+  const litrosCarregado =
+    kmCarregado / consumoCarregado;
+
+  const litrosVazio =
+    kmVazio > 0
+      ? kmVazio / consumoVazio
+      : 0;
+
+  const litrosTotal =
+    litrosCarregado + litrosVazio;
+
+  const custoCombustivel =
+    litrosTotal * precoDiesel;
+
+  const custoManutencao =
+    kmTotal *
+    Number(freteProprio.manutencao_por_km);
+
+  const custoMotorista =
+    Number(
+      freteProprio.custo_motorista_por_viagem
+    ) * viagens;
+
+  const custoAlimentacao =
+    Number(
+      freteProprio.alimentacao_motorista_por_viagem
+    ) * viagens;
+
+  // Neste momento, o campo "pedagios" representa
+  // o valor de pedágio por viagem.
+  const custoPedagios =
+    Number(freteProprio.pedagios) *
+    viagens;
+
+  const custoCarregamento =
+    Number(
+      freteProprio.custo_carregamento_por_viagem
+    ) * viagens;
+
+  const custoDescarregamento =
+    Number(
+      freteProprio.custo_descarregamento_por_viagem
+    ) * viagens;
+
+  const custoSeguro =
+    Number(freteProprio.seguro);
+
+  const outrosCustos =
+    Number(freteProprio.outros_custos);
+
+  const custoTotal =
+    custoCombustivel +
+    custoManutencao +
+    custoMotorista +
+    custoAlimentacao +
+    custoPedagios +
+    custoCarregamento +
+    custoDescarregamento +
+    custoSeguro +
+    outrosCustos;
+
+  return {
+    transporte: {
+      cavaloMecanico:
+        freteProprio.cavalo_mecanico,
+
+      carreta:
+        freteProprio.carreta,
+
+      quantidadeViagens: viagens,
+
+      distanciaIdaKm: distanciaIda,
+
+      considerarIdaVolta:
+        freteProprio.considerar_ida_volta,
+
+      kmCarregado: Number(
+        kmCarregado.toFixed(2)
+      ),
+
+      kmVazio: Number(
+        kmVazio.toFixed(2)
+      ),
+
+      kmTotal: Number(
+        kmTotal.toFixed(2)
+      ),
+    },
+
+    combustivel: {
+      consumoCarregadoKmL:
+        consumoCarregado,
+
+      consumoVazioKmL:
+        consumoVazio,
+
+      litrosCarregado: Number(
+        litrosCarregado.toFixed(2)
+      ),
+
+      litrosVazio: Number(
+        litrosVazio.toFixed(2)
+      ),
+
+      litrosTotal: Number(
+        litrosTotal.toFixed(2)
+      ),
+
+      precoDieselL:
+        precoDiesel,
+
+      custoCombustivel: Number(
+        custoCombustivel.toFixed(2)
+      ),
+    },
+
+    custos: {
+      combustivel: Number(
+        custoCombustivel.toFixed(2)
+      ),
+
+      manutencao: Number(
+        custoManutencao.toFixed(2)
+      ),
+
+      motorista: Number(
+        custoMotorista.toFixed(2)
+      ),
+
+      alimentacao: Number(
+        custoAlimentacao.toFixed(2)
+      ),
+
+      pedagios: Number(
+        custoPedagios.toFixed(2)
+      ),
+
+      carregamento: Number(
+        custoCarregamento.toFixed(2)
+      ),
+
+      descarregamento: Number(
+        custoDescarregamento.toFixed(2)
+      ),
+
+      seguro: Number(
+        custoSeguro.toFixed(2)
+      ),
+
+      outrosCustos: Number(
+        outrosCustos.toFixed(2)
+      ),
+    },
+
+    custoPorViagem: Number(
+      (custoTotal / viagens).toFixed(2)
+    ),
+
+    custoTotalFreteProprio: Number(
+      custoTotal.toFixed(2)
+    ),
+  };
+}
+
+async function sugerirQuantidadeViagens(
+  projetoId,
+  usuarioId
+) {
+  const logistica = await obterLogistica(
+    projetoId,
+    usuarioId
+  );
+
+  const freteProprio =
+    await LogisticaPropria.findOne({
+      where: {
+        logistica_id: logistica.id,
+      },
+    });
+
+  if (!freteProprio) {
+    throw new Error(
+      "Dados do frete próprio ainda não cadastrados."
+    );
+  }
+
+  if (
+    !freteProprio.capacidade_pecas ||
+    Number(freteProprio.capacidade_pecas) <= 0
+  ) {
+    throw new Error(
+      "Informe a capacidade de peças da carreta."
+    );
+  }
+
+  const elementos = await ElementoProjeto.findAll({
+    where: {
+      projeto_id: projetoId,
+    },
+  });
+
+  if (elementos.length === 0) {
+    throw new Error(
+      "O projeto não possui elementos cadastrados."
+    );
+  }
+
+  const totalPecas = elementos.reduce(
+    (total, elemento) =>
+      total + Number(elemento.quantidade),
+    0
+  );
+
+  const capacidadePecas = Number(
+    freteProprio.capacidade_pecas
+  );
+
+  const viagensPorPecas = Math.ceil(
+    totalPecas / capacidadePecas
+  );
+
+  return {
+    totalPecas,
+    capacidadePecas,
+
+    viagensPorPecas,
+
+    quantidadeViagensAtual: Number(
+      freteProprio.quantidade_viagens
+    ),
+
+    quantidadeViagensSugerida:
+      viagensPorPecas,
+  };
+}
+
 module.exports = {
   salvarLogisticaPropria,
   buscarLogisticaPropria,
+  calcularCustoFreteProprio,
+  sugerirQuantidadeViagens,
 };
