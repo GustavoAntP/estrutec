@@ -9,6 +9,7 @@ const configuracaoFabricacaoControlador = require("../controladores/configuracao
 const precoFabricacaoControlador = require("../controladores/precoFabricacaoControlador");
 const logisticaControlador = require("../controladores/logisticaControlador");
 const logisticaTerceirizadaControlador = require("../controladores/logisticaTerceirizadaControlador");
+const logisticaPropriaControlador = require("../controladores/logisticaPropriaControlador");
 
 
 const router = express.Router();
@@ -40,5 +41,8 @@ router.put("/:id/logistica", autenticar, logisticaControlador.salvar);
 
 router.get("/:id/logistica/terceirizada", autenticar, logisticaTerceirizadaControlador.buscar);
 router.put("/:id/logistica/terceirizada", autenticar, logisticaTerceirizadaControlador.salvar);
+
+router.get("/:id/logistica/propria", autenticar, logisticaPropriaControlador.buscar);
+router.put("/:id/logistica/propria", autenticar, logisticaPropriaControlador.salvar);
 
 module.exports = router;
