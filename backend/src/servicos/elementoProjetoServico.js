@@ -200,6 +200,26 @@ async function atualizarElemento(
     }
   }
 
+  let pesoUnitarioKg = elemento.peso_unitario_kg;
+
+  if (dados.pesoUnitarioKg !== undefined) {
+    if (
+      dados.pesoUnitarioKg !== null &&
+      dados.pesoUnitarioKg !== ""
+    ) {
+      pesoUnitarioKg = Number(dados.pesoUnitarioKg);
+
+      if (
+        !Number.isFinite(pesoUnitarioKg) ||
+        pesoUnitarioKg <= 0
+      ) {
+        throw new Error("Peso unitário inválido.");
+      }
+    } else {
+      pesoUnitarioKg = null;
+    }
+  }
+
   await elemento.update({
     nome_aplicacao:
       dados.nomeAplicacao !== undefined
@@ -225,6 +245,8 @@ async function atualizarElemento(
 
     largura,
     altura,
+    area_secao: areaSecao,
+    peso_unitario_kg: pesoUnitarioKg,
     comprimento,
     quantidade,
   });

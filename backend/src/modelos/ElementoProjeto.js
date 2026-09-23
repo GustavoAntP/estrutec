@@ -69,6 +69,10 @@ const ElementoProjeto = sequelize.define(
       type: DataTypes.DECIMAL(10, 4),
       allowNull: true,
     },
+    peso_unitario_kg: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+    },
   },
   {
     tableName: "elementos_projeto",

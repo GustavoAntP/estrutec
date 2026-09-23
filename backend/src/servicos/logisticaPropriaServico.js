@@ -531,12 +531,16 @@ async function sugerirQuantidadeViagens(
     );
   }
 
+  const capacidadePecas = Number(
+    freteProprio.capacidade_pecas
+  );
+
   if (
-    !freteProprio.capacidade_pecas ||
-    Number(freteProprio.capacidade_pecas) <= 0
+    !Number.isInteger(capacidadePecas) ||
+    capacidadePecas <= 0
   ) {
     throw new Error(
-      "Informe a capacidade de peças da carreta."
+      "Informe uma capacidade de peças válida para a carreta."
     );
   }
 
@@ -558,26 +562,171 @@ async function sugerirQuantidadeViagens(
     0
   );
 
-  const capacidadePecas = Number(
-    freteProprio.capacidade_pecas
-  );
-
   const viagensPorPecas = Math.ceil(
     totalPecas / capacidadePecas
   );
 
+  const capacidadePesoKg =
+    freteProprio.capacidade_peso_kg !== null
+      ? Number(freteProprio.capacidade_peso_kg)
+      : null;
+
+  const elementosSemPeso = elementos.filter(
+    (elemento) =>
+      elemento.peso_unitario_kg === null ||
+      elemento.peso_unitario_kg === undefined ||
+      Number(elemento.peso_unitario_kg) <= 0
+  );
+
+  let pesoTotalKg = null;
+  let viagensPorPeso = null;
+  let quantidadeViagensSugerida = null;
+  let criterioLimitante = null;
+
+  if (
+    capacidadePesoKg !== null &&
+    capacidadePesoKg > 0
+  ) {
+    if (elementosSemPeso.length === 0) {
+      pesoTotalKg = elementos.reduce(
+        (total, elemento) => {
+          const pesoUnitario = Number(
+            elemento.peso_unitario_kg
+          );
+
+          const quantidade = Number(
+            elemento.quantidade
+          );
+
+          return (
+            total +
+            pesoUnitario * quantidade
+          );
+        },
+        0
+      );
+
+      viagensPorPeso = Math.ceil(
+        pesoTotalKg / capacidadePesoKg
+      );
+
+      quantidadeViagensSugerida = Math.max(
+        viagensPorPecas,
+        viagensPorPeso
+      );
+
+      if (viagensPorPeso > viagensPorPecas) {
+        criterioLimitante = "PESO";
+      } else if (
+        viagensPorPecas > viagensPorPeso
+      ) {
+        criterioLimitante = "PECAS";
+      } else {
+        criterioLimitante = "EMPATE";
+      }
+    } else {
+      criterioLimitante = "PESO_PENDENTE";
+    }
+  } else {
+    quantidadeViagensSugerida =
+      viagensPorPecas;
+
+    criterioLimitante = "PECAS";
+  }
+
   return {
     totalPecas,
-    capacidadePecas,
 
-    viagensPorPecas,
+    pesoTotalKg:
+      pesoTotalKg !== null
+        ? Number(pesoTotalKg.toFixed(2))
+        : null,
+
+    capacidades: {
+      pecas: capacidadePecas,
+      pesoKg: capacidadePesoKg,
+    },
+
+    calculo: {
+      viagensPorPecas,
+      viagensPorPeso,
+      quantidadeViagensSugerida,
+      criterioLimitante,
+    },
 
     quantidadeViagensAtual: Number(
       freteProprio.quantidade_viagens
     ),
 
-    quantidadeViagensSugerida:
-      viagensPorPecas,
+    elementosSemPeso: elementosSemPeso.map(
+      (elemento) => ({
+        id: elemento.id,
+        nomeAplicacao:
+          elemento.nome_aplicacao,
+      })
+    ),
+  };
+}
+
+async function aplicarSugestaoViagens(
+  projetoId,
+  usuarioId
+) {
+  const sugestao = await sugerirQuantidadeViagens(
+    projetoId,
+    usuarioId
+  );
+
+  if (
+    sugestao.calculo.quantidadeViagensSugerida === null
+  ) {
+    throw new Error(
+      "Não é possível aplicar a sugestão enquanto existirem elementos sem peso informado."
+    );
+  }
+
+  const logistica = await obterLogistica(
+    projetoId,
+    usuarioId
+  );
+
+  const freteProprio =
+    await LogisticaPropria.findOne({
+      where: {
+        logistica_id: logistica.id,
+      },
+    });
+
+  if (!freteProprio) {
+    throw new Error(
+      "Dados do frete próprio ainda não cadastrados."
+    );
+  }
+
+  const quantidadeAnterior = Number(
+    freteProprio.quantidade_viagens
+  );
+
+  const quantidadeNova = Number(
+    sugestao.calculo.quantidadeViagensSugerida
+  );
+
+  await freteProprio.update({
+    quantidade_viagens: quantidadeNova,
+  });
+
+  return {
+    quantidadeAnterior,
+    quantidadeAtual: quantidadeNova,
+
+    criterioLimitante:
+      sugestao.calculo.criterioLimitante,
+
+    viagensPorPecas:
+      sugestao.calculo.viagensPorPecas,
+
+    viagensPorPeso:
+      sugestao.calculo.viagensPorPeso,
   };
 }
 
@@ -586,4 +735,5 @@ module.exports = {
   buscarLogisticaPropria,
   calcularCustoFreteProprio,
   sugerirQuantidadeViagens,
+  aplicarSugestaoViagens,
 };

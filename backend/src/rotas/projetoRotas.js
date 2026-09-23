@@ -38,15 +38,18 @@ router.post("/:id/fabricacao/confirmar", autenticar, fabricacaoControlador.confi
 
 router.get("/:id/logistica", autenticar, logisticaControlador.buscar);
 router.put("/:id/logistica", autenticar, logisticaControlador.salvar);
+router.get("/:id/logistica/custos", autenticar, logisticaControlador.calcularCusto);
+router.post("/:id/logistica/confirmar", autenticar, logisticaControlador.confirmar);
 
 router.get("/:id/logistica/terceirizada", autenticar, logisticaTerceirizadaControlador.buscar);
 router.put("/:id/logistica/terceirizada", autenticar, logisticaTerceirizadaControlador.salvar);
 
 router.get("/:id/logistica/propria", autenticar, logisticaPropriaControlador.buscar);
 router.put("/:id/logistica/propria", autenticar, logisticaPropriaControlador.salvar);
-
 router.get("/:id/logistica/propria/custos", autenticar, logisticaPropriaControlador.calcularCusto);
-
 router.get("/:id/logistica/propria/sugestao-viagens", autenticar, logisticaPropriaControlador.sugerirViagens);
+router.post("/:id/logistica/propria/aplicar-sugestao-viagens", autenticar, logisticaPropriaControlador.aplicarSugestao);
+
+
 
 module.exports = router;

@@ -41,7 +41,44 @@ async function buscar(req, res) {
   }
 }
 
+async function calcularCusto(req, res) {
+  try {
+    const resultado =
+      await logisticaServico.calcularCustoLogistica(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json(resultado);
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function confirmar(req, res) {
+  try {
+    const resultado =
+      await logisticaServico.confirmarLogistica(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json({
+      mensagem: "Logística confirmada com sucesso!",
+      ...resultado,
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   salvar,
   buscar,
+  calcularCusto,
+  confirmar,
 };

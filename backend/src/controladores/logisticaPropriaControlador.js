@@ -73,9 +73,30 @@ async function sugerirViagens(req, res) {
   }
 }
 
+async function aplicarSugestao(req, res) {
+  try {
+    const resultado =
+      await logisticaPropriaServico.aplicarSugestaoViagens(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json({
+      mensagem:
+        "Sugestão de viagens aplicada com sucesso!",
+      resultado,
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   salvar,
   buscar,
   calcularCusto,
   sugerirViagens,
+  aplicarSugestao,
 };
