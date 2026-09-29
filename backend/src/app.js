@@ -12,6 +12,9 @@ const PrecoFabricacao = require("./modelos/PrecoFabricacao");
 const LogisticaProjeto = require("./modelos/LogisticaProjeto");
 const LogisticaTerceirizada = require("./modelos/LogisticaTerceirizada");
 const LogisticaPropria = require("./modelos/LogisticaPropria");
+const MontagemProjeto = require("./modelos/MontagemProjeto");
+const EquipamentoMontagem = require("./modelos/EquipamentoMontagem");
+const EquipeMontagem = require("./modelos/EquipeMontagem");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");

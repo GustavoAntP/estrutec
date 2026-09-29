@@ -10,6 +10,9 @@ const precoFabricacaoControlador = require("../controladores/precoFabricacaoCont
 const logisticaControlador = require("../controladores/logisticaControlador");
 const logisticaTerceirizadaControlador = require("../controladores/logisticaTerceirizadaControlador");
 const logisticaPropriaControlador = require("../controladores/logisticaPropriaControlador");
+const montagemControlador = require("../controladores/montagemControlador");
+const equipamentoMontagemControlador = require("../controladores/equipamentoMontagemControlador");
+const equipeMontagemControlador = require("../controladores/equipeMontagemControlador");
 
 
 const router = express.Router();
@@ -49,6 +52,22 @@ router.put("/:id/logistica/propria", autenticar, logisticaPropriaControlador.sal
 router.get("/:id/logistica/propria/custos", autenticar, logisticaPropriaControlador.calcularCusto);
 router.get("/:id/logistica/propria/sugestao-viagens", autenticar, logisticaPropriaControlador.sugerirViagens);
 router.post("/:id/logistica/propria/aplicar-sugestao-viagens", autenticar, logisticaPropriaControlador.aplicarSugestao);
+
+router.get("/:id/montagem", autenticar, montagemControlador.buscar);
+router.put("/:id/montagem", autenticar, montagemControlador.salvar);
+
+router.get("/:id/montagem/equipamentos", autenticar, equipamentoMontagemControlador.listar);
+router.post("/:id/montagem/equipamentos", autenticar, equipamentoMontagemControlador.cadastrar);
+router.put("/:id/montagem/equipamentos/:equipamentoId", autenticar, equipamentoMontagemControlador.atualizar);
+router.delete("/:id/montagem/equipamentos/:equipamentoId", autenticar, equipamentoMontagemControlador.excluir);
+
+router.get("/:id/montagem/equipes", autenticar, equipeMontagemControlador.listar);
+router.post("/:id/montagem/equipes", autenticar, equipeMontagemControlador.cadastrar);
+router.put("/:id/montagem/equipes/:equipeId", autenticar, equipeMontagemControlador.atualizar);
+router.delete("/:id/montagem/equipes/:equipeId", autenticar, equipeMontagemControlador.excluir);
+
+router.get("/:id/montagem/custos", autenticar, montagemControlador.calcularCustos);
+router.post("/:id/montagem/confirmar", autenticar, montagemControlador.confirmar);
 
 
 
