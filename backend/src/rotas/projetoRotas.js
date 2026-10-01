@@ -14,6 +14,7 @@ const montagemControlador = require("../controladores/montagemControlador");
 const equipamentoMontagemControlador = require("../controladores/equipamentoMontagemControlador");
 const equipeMontagemControlador = require("../controladores/equipeMontagemControlador");
 const resumoFinanceiroControlador = require("../controladores/resumoFinanceiroControlador");
+const relatorioControlador = require("../controladores/relatorioControlador");
 
 
 const router = express.Router();
@@ -73,6 +74,8 @@ router.post("/:id/montagem/confirmar", autenticar, montagemControlador.confirmar
 router.get("/:id/resumo-financeiro", autenticar, resumoFinanceiroControlador.calcular);
 
 router.post("/:id/finalizar", autenticar, resumoFinanceiroControlador.finalizar);
+
+router.get("/:id/relatorio-final", autenticar, relatorioControlador.gerarFinal);
 
 
 

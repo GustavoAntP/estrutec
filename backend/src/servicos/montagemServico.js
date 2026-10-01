@@ -271,8 +271,7 @@ async function calcularCustos(
     custosGerais: {
       hospedagem: custoHospedagem,
       alimentacao: custoAlimentacao,
-      transporteEquipe:
-        custoTransporteEquipe,
+      transporteEquipe: custoTransporteEquipe,
       outrosCustos,
       total: custosGerais,
     },
