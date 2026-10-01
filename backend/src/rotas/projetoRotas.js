@@ -13,6 +13,7 @@ const logisticaPropriaControlador = require("../controladores/logisticaPropriaCo
 const montagemControlador = require("../controladores/montagemControlador");
 const equipamentoMontagemControlador = require("../controladores/equipamentoMontagemControlador");
 const equipeMontagemControlador = require("../controladores/equipeMontagemControlador");
+const resumoFinanceiroControlador = require("../controladores/resumoFinanceiroControlador");
 
 
 const router = express.Router();
@@ -68,6 +69,10 @@ router.delete("/:id/montagem/equipes/:equipeId", autenticar, equipeMontagemContr
 
 router.get("/:id/montagem/custos", autenticar, montagemControlador.calcularCustos);
 router.post("/:id/montagem/confirmar", autenticar, montagemControlador.confirmar);
+
+router.get("/:id/resumo-financeiro", autenticar, resumoFinanceiroControlador.calcular);
+
+router.post("/:id/finalizar", autenticar, resumoFinanceiroControlador.finalizar);
 
 
 
