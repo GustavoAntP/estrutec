@@ -3,6 +3,8 @@ const ElementoProjeto = require("../modelos/ElementoProjeto");
 const fabricacaoServico = require("./fabricacaoServico");
 const logisticaServico = require("./logisticaServico");
 const montagemServico = require("./montagemServico");
+const LogisticaProjeto = require("../modelos/LogisticaProjeto");
+const LogisticaPropria = require("../modelos/LogisticaPropria");
 const fs = require("fs");
 const path = require("path");
 
@@ -105,6 +107,27 @@ async function gerarRelatorioFinal(
         projetoId,
         usuarioId
     );
+
+    let freteProprio = null;
+
+  if (logistica.tipoFrete === "PROPRIO") {
+    const configuracaoLogistica =
+      await LogisticaProjeto.findOne({
+        where: {
+          projeto_id: projetoId,
+        },
+      });
+
+    if (configuracaoLogistica) {
+      freteProprio =
+        await LogisticaPropria.findOne({
+          where: {
+            logistica_id:
+              configuracaoLogistica.id,
+          },
+        });
+    }
+  }
 
   const montagem =
     await montagemServico.calcularCustos(
@@ -667,23 +690,336 @@ async function gerarRelatorioFinal(
             </tr>
             </table>
         `
-        : `
+          : `
+            <h3>4.1 Dados do Transporte</h3>
+
             <table class="dados">
-            <tr>
+              <tr>
                 <td>Tipo de frete</td>
                 <td>Próprio</td>
-            </tr>
+              </tr>
 
-            <tr>
-                <td>Custo da logística</td>
+              <tr>
+                <td>Cavalo mecânico</td>
                 <td>
-                ${formatarMoeda(
-                    logistica.custoLogistica
-                )}
+                  ${escaparHtml(
+                    logistica.detalhes.transporte
+                      .cavaloMecanico || "-"
+                  )}
                 </td>
-            </tr>
+              </tr>
+
+              <tr>
+                <td>Carreta</td>
+                <td>
+                  ${escaparHtml(
+                    logistica.detalhes.transporte
+                      .carreta || "-"
+                  )}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Capacidade de peças</td>
+                <td>
+                  ${
+                    freteProprio?.capacidade_pecas
+                      ?? "-"
+                  }
+                </td>
+              </tr>
+
+              <tr>
+                <td>Capacidade de peso</td>
+                <td>
+                  ${
+                    freteProprio?.capacidade_peso_kg
+                      ? `${formatarNumero(
+                          freteProprio
+                            .capacidade_peso_kg
+                        )} kg`
+                      : "-"
+                  }
+                </td>
+              </tr>
+
+              <tr>
+                <td>Quantidade de viagens</td>
+                <td>
+                  ${logistica.detalhes.transporte
+                    .quantidadeViagens}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Distância de ida</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.transporte
+                      .distanciaIdaKm
+                  )} km
+                </td>
+              </tr>
+
+              <tr>
+                <td>Considerar ida e volta</td>
+                <td>
+                  ${
+                    logistica.detalhes.transporte
+                      .considerarIdaVolta
+                      ? "Sim"
+                      : "Não"
+                  }
+                </td>
+              </tr>
+
+              <tr>
+                <td>Km carregado</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.transporte
+                      .kmCarregado
+                  )} km
+                </td>
+              </tr>
+
+              <tr>
+                <td>Km vazio</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.transporte
+                      .kmVazio
+                  )} km
+                </td>
+              </tr>
+
+              <tr class="total">
+                <td>Quilometragem total</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.transporte
+                      .kmTotal
+                  )} km
+                </td>
+              </tr>
             </table>
-        `
+
+
+            <h3>4.2 Combustível</h3>
+
+            <table class="dados">
+              <tr>
+                <td>Consumo carregado</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.combustivel
+                      .consumoCarregadoKmL
+                  )} km/L
+                </td>
+              </tr>
+
+              <tr>
+                <td>Consumo vazio</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.combustivel
+                      .consumoVazioKmL
+                  )} km/L
+                </td>
+              </tr>
+
+              <tr>
+                <td>Litros carregado</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.combustivel
+                      .litrosCarregado
+                  )} L
+                </td>
+              </tr>
+
+              <tr>
+                <td>Litros vazio</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.combustivel
+                      .litrosVazio
+                  )} L
+                </td>
+              </tr>
+
+              <tr>
+                <td>Litros totais</td>
+                <td>
+                  ${formatarNumero(
+                    logistica.detalhes.combustivel
+                      .litrosTotal
+                  )} L
+                </td>
+              </tr>
+
+              <tr>
+                <td>Preço do diesel</td>
+                <td>
+                  ${formatarMoeda(
+                    logistica.detalhes.combustivel
+                      .precoDieselL
+                  )} / L
+                </td>
+              </tr>
+
+              <tr class="total">
+                <td>Custo de combustível</td>
+                <td>
+                  ${formatarMoeda(
+                    logistica.detalhes.combustivel
+                      .custoCombustivel
+                  )}
+                </td>
+              </tr>
+            </table>
+
+
+            <h3>4.3 Custos do Frete</h3>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="valor">Valor</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>Combustível</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .combustivel
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Manutenção</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .manutencao
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Motorista</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .motorista
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Alimentação do motorista</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .alimentacao
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Pedágios</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .pedagios
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Carregamento</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .carregamento
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Descarregamento</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .descarregamento
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Seguro</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .seguro
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Outros custos</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes.custos
+                        .outrosCustos
+                    )}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Custo por viagem</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.detalhes
+                        .custoPorViagem
+                    )}
+                  </td>
+                </tr>
+
+                <tr class="total">
+                  <td>Custo Total da Logística</td>
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica.custoLogistica
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            ${
+              freteProprio?.observacoes
+                ? `
+                  <div class="observacoes">
+                    <strong>
+                      Observações da logística
+                    </strong>
+
+                    <br><br>
+
+                    ${escaparHtml(
+                      freteProprio.observacoes
+                    )}
+                  </div>
+                `
+                : ""
+            }
+          `
     }
 
     <div class="quebra"></div>
