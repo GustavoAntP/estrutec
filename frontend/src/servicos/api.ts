@@ -6,16 +6,36 @@ export async function api(
   caminho: string,
   opcoes: RequestInit = {}
 ) {
-  const resposta = await fetch(
-    `${API_URL}${caminho}`,
-    {
-      ...opcoes,
-      headers: {
-        "Content-Type": "application/json",
-        ...opcoes.headers,
-      },
-    }
-  );
+  return fetch(`${API_URL}${caminho}`, {
+    ...opcoes,
+    headers: {
+      "Content-Type": "application/json",
+      ...opcoes.headers,
+    },
+  });
+}
 
-  return resposta;
+export async function apiAutenticada(
+  caminho: string,
+  opcoes: RequestInit = {}
+) {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("estrutec_token")
+      : null;
+
+  return fetch(`${API_URL}${caminho}`, {
+    ...opcoes,
+    headers: {
+      "Content-Type": "application/json",
+
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
+
+      ...opcoes.headers,
+    },
+  });
 }
