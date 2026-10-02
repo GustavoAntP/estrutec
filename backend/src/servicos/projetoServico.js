@@ -163,10 +163,39 @@ async function excluirProjeto(id, usuarioId) {
   return true;
 }
 
+async function reabrirProjeto(
+  projetoId,
+  usuarioId
+) {
+  const projeto = await Projeto.findOne({
+    where: {
+      id: projetoId,
+      usuario_id: usuarioId,
+    },
+  });
+
+  if (!projeto) {
+    throw new Error("Projeto não encontrado.");
+  }
+
+  if (projeto.status !== "FINALIZADO") {
+    throw new Error(
+      "Somente projetos finalizados podem ser reabertos."
+    );
+  }
+
+  await projeto.update({
+    status: "MONTAGEM_CALCULADA",
+  });
+
+  return projeto;
+}
+
 module.exports = {
   cadastrarProjeto,
   listarProjetos,
   buscarProjetoPorId,
   atualizarProjeto,
   excluirProjeto,
+  reabrirProjeto,
 };

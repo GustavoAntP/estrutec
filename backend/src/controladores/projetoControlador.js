@@ -87,10 +87,36 @@ async function excluir(req, res) {
   }
 }
 
+async function reabrir(req, res) {
+  try {
+    const projeto =
+      await projetoServico.reabrirProjeto(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json({
+      mensagem:
+        "Projeto reaberto com sucesso!",
+      projeto: {
+        id: projeto.id,
+        codigo: projeto.codigo,
+        nome: projeto.nome,
+        status: projeto.status,
+      },
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
 module.exports = {
   cadastrar,
   listar,
   buscarPorId,
   atualizar,
   excluir,
+  reabrir,
 };
