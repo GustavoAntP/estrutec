@@ -26,8 +26,8 @@ router.post("/", autenticar, projetoControlador.cadastrar);
 router.put("/:id", autenticar, verificarProjetoEditavel, projetoControlador.atualizar);
 router.delete("/:id", autenticar, verificarProjetoEditavel, projetoControlador.excluir);
 
-router.post("/:id/importar-planilha", verificarProjetoEditavel, autenticar, uploadPlanilha.single("arquivo"), planilhaControlador.importar);
-router.post("/:id/confirmar-importacao", verificarProjetoEditavel, autenticar, elementoProjetoControlador.confirmarImportacao);
+router.post("/:id/importar-planilha", autenticar, verificarProjetoEditavel, uploadPlanilha.single("arquivo"), planilhaControlador.importar);
+router.post("/:id/confirmar-importacao", autenticar, verificarProjetoEditavel, elementoProjetoControlador.confirmarImportacao);
 
 router.get("/:id/elementos", autenticar, elementoProjetoControlador.listar);
 router.put("/:id/elementos/:elementoId", autenticar, verificarProjetoEditavel, elementoProjetoControlador.atualizar);

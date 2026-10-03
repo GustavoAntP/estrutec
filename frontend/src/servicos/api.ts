@@ -24,18 +24,30 @@ export async function apiAutenticada(
       ? localStorage.getItem("estrutec_token")
       : null;
 
+  const headers = new Headers(opcoes.headers);
+
+  const usandoFormData =
+    opcoes.body instanceof FormData;
+
+  if (
+    !usandoFormData &&
+    !headers.has("Content-Type")
+  ) {
+    headers.set(
+      "Content-Type",
+      "application/json"
+    );
+  }
+
+  if (token) {
+    headers.set(
+      "Authorization",
+      `Bearer ${token}`
+    );
+  }
+
   return fetch(`${API_URL}${caminho}`, {
     ...opcoes,
-    headers: {
-      "Content-Type": "application/json",
-
-      ...(token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : {}),
-
-      ...opcoes.headers,
-    },
+    headers,
   });
 }
