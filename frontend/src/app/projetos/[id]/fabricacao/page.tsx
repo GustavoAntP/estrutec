@@ -55,73 +55,36 @@ type ConfiguracaoFabricacao = {
 
 export default function FabricacaoPage() {
   const router = useRouter();
-
-  const params =
-    useParams<{ id: string }>();
-
+  const params = useParams<{ id: string }>();
   const id = params.id;
-
   const [fck, setFck] = useState("");
-  const [taxaArmadura, setTaxaArmadura] =
-    useState("");
-  const [desperdicio, setDesperdicio] =
-    useState("");
+  const [taxaArmadura, setTaxaArmadura] = useState("");
+  const [desperdicio, setDesperdicio] = useState("");
   const [cimento, setCimento] = useState("");
   const [areia, setAreia] = useState("");
   const [brita, setBrita] = useState("");
   const [agua, setAgua] = useState("");
-  const [neoprene, setNeoprene] =
-    useState("");
-
+  const [neoprene, setNeoprene] = useState("");
   const [precoCimento, setPrecoCimento] = useState("");
   const [precoAreia, setPrecoAreia] = useState("");
   const [precoBrita, setPrecoBrita] = useState("");
   const [precoAgua, setPrecoAgua] = useState("");
   const [precoAco, setPrecoAco] = useState("");
   const [precoNeoprene, setPrecoNeoprene] = useState("");
-
-  const [salvandoPrecos, setSalvandoPrecos] =
-    useState(false);
-
-  const [sucessoPrecos, setSucessoPrecos] =
-    useState("");
-
-  const [custos, setCustos] =
-    useState<CustosFabricacao | null>(null);
-
-  const [calculando, setCalculando] =
-    useState(false);
-
-  const [erroCalculo, setErroCalculo] =
-    useState("");  
-
-  const [elementos, setElementos] =
-    useState<ElementoProjeto[]>([]);
-
-  const [areas, setAreas] =
-    useState<Record<number, string>>({});
-
-  const [salvandoArea, setSalvandoArea] =
-    useState<number | null>(null);
-
-  const [sucessoArea, setSucessoArea] =
-    useState("");
-
-  const [confirmandoFabricacao, setConfirmandoFabricacao] =
-    useState(false);
-
-  const [fabricacaoConfirmada, setFabricacaoConfirmada] =
-    useState(false);
-
-  const [sucessoConfirmacao, setSucessoConfirmacao] =
-    useState("");
-
-  const [carregando, setCarregando] =
-    useState(true);
-
-  const [salvando, setSalvando] =
-    useState(false);
-
+  const [salvandoPrecos, setSalvandoPrecos] = useState(false);
+  const [sucessoPrecos, setSucessoPrecos] = useState("");
+  const [custos, setCustos] = useState<CustosFabricacao | null>(null);
+  const [calculando, setCalculando] = useState(false);
+  const [erroCalculo, setErroCalculo] = useState("");  
+  const [elementos, setElementos] = useState<ElementoProjeto[]>([]);
+  const [areas, setAreas] = useState<Record<number, string>>({});
+  const [salvandoArea, setSalvandoArea] = useState<number | null>(null);
+  const [sucessoArea, setSucessoArea] = useState("");
+  const [confirmandoFabricacao, setConfirmandoFabricacao] = useState(false);
+  const [fabricacaoConfirmada, setFabricacaoConfirmada] = useState(false);
+  const [sucessoConfirmacao, setSucessoConfirmacao] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
 
