@@ -32,6 +32,18 @@ export default function ProjetoPage() {
 
   const [erro, setErro] = useState("");
 
+  const [reabrindo, setReabrindo] =
+    useState(false);
+
+  const [modalReabrirAberto, setModalReabrirAberto] =
+    useState(false);
+
+  const [erroReabertura, setErroReabertura] =
+    useState("");
+
+  const [sucessoReabertura, setSucessoReabertura] =
+    useState("");
+
   useEffect(() => {
     carregarProjeto();
   }, [id]);
@@ -76,6 +88,115 @@ export default function ProjetoPage() {
     } finally {
       setCarregando(false);
     }
+  }
+
+  async function reabrirProjeto() {
+    setReabrindo(true);
+    setErroReabertura("");
+    setSucessoReabertura("");
+
+    try {
+      const resposta = await apiAutenticada(
+        `/projetos/${id}/reabrir`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (resposta.status === 401) {
+        localStorage.removeItem(
+          "estrutec_token"
+        );
+
+        router.push("/login");
+        return;
+      }
+
+      const dados =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErroReabertura(
+          dados.erro ||
+            "Não foi possível reabrir o projeto."
+        );
+
+        return;
+      }
+
+      setModalReabrirAberto(false);
+
+      setSucessoReabertura(
+        dados.mensagem ||
+          "Projeto reaberto com sucesso!"
+      );
+
+      await carregarProjeto();
+    } catch {
+      setErroReabertura(
+        "Não foi possível conectar ao servidor."
+      );
+    } finally {
+      setReabrindo(false);
+    }
+  }
+
+  function etapaConcluida(etapa: string) {
+    const status = projeto.status;
+
+    const ordem = [
+      "RASCUNHO",
+      "IMPORTACAO_PENDENTE",
+      "FABRICACAO_CALCULADA",
+      "LOGISTICA_CALCULADA",
+      "MONTAGEM_CALCULADA",
+      "FINALIZADO",
+    ];
+
+    const indiceAtual =
+      ordem.indexOf(status);
+
+    if (etapa === "fabricacao") {
+      return indiceAtual >= 2;
+    }
+
+    if (etapa === "logistica") {
+      return indiceAtual >= 3;
+    }
+
+    if (etapa === "montagem") {
+      return indiceAtual >= 4;
+    }
+
+    if (etapa === "resumo") {
+      return indiceAtual >= 4;
+    }
+
+    if (etapa === "relatorio") {
+      return status === "FINALIZADO";
+    }
+
+    return false;
+  }
+
+  function textoStatusEtapa(
+    etapa: string
+  ) {
+    if (etapa === "resumo") {
+      return etapaConcluida(etapa)
+        ? "Disponível"
+        : "Pendente";
+    }
+
+    if (etapa === "relatorio") {
+      return etapaConcluida(etapa)
+        ? "Disponível"
+        : "Pendente";
+    }
+
+    return etapaConcluida(etapa)
+      ? "Concluída"
+      : "Pendente";
   }
 
   function formatarStatus(status: string) {
@@ -175,14 +296,12 @@ export default function ProjetoPage() {
               {projeto.cliente}
             </p>
           </div>
-
           <span style={estilos.status}>
             {formatarStatus(
               projeto.status
             )}
           </span>
         </div>
-
         <div style={estilos.grid}>
           <div style={estilos.cardDados}>
             <h3 style={estilos.tituloCard}>
@@ -268,98 +387,255 @@ export default function ProjetoPage() {
         </h3>
 
         <div style={estilos.etapas}>
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("importacao")
-            }
-          >
-            <strong>
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("importacao")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               1. Importação
             </strong>
 
-            <span>
-              Planilha de elementos
-              pré-moldados
+            <span style={estilos.statusPendente}>
+              ○ Planilha
             </span>
-          </button>
+          </div>
 
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("fabricacao")
-            }
-          >
-            <strong>
+          <span style={estilos.descricaoEtapa}>
+            Planilha de elementos pré-moldados
+          </span>
+        </button>
+
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("fabricacao")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               2. Fabricação
             </strong>
 
-            <span>
-              Materiais, volumes e custos
+            <span
+              style={
+                etapaConcluida("fabricacao")
+                  ? estilos.statusConcluido
+                  : estilos.statusPendente
+              }
+            >
+              {etapaConcluida("fabricacao")
+                ? "✓ Concluída"
+                : "○ Pendente"}
             </span>
-          </button>
+          </div>
 
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("logistica")
-            }
-          >
-            <strong>
+          <span style={estilos.descricaoEtapa}>
+            Materiais, volumes e custos
+          </span>
+        </button>
+
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("logistica")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               3. Logística
             </strong>
 
-            <span>
-              Frete próprio ou terceirizado
+            <span
+              style={
+                etapaConcluida("logistica")
+                  ? estilos.statusConcluido
+                  : estilos.statusPendente
+              }
+            >
+              {etapaConcluida("logistica")
+                ? "✓ Concluída"
+                : "○ Pendente"}
             </span>
-          </button>
+          </div>
 
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("montagem")
-            }
-          >
-            <strong>
+          <span style={estilos.descricaoEtapa}>
+            Frete próprio ou terceirizado
+          </span>
+        </button>
+
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("montagem")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               4. Montagem
             </strong>
 
-            <span>
-              Equipamentos, equipe e custos
+            <span
+              style={
+                etapaConcluida("montagem")
+                  ? estilos.statusConcluido
+                  : estilos.statusPendente
+              }
+            >
+              {etapaConcluida("montagem")
+                ? "✓ Concluída"
+                : "○ Pendente"}
             </span>
-          </button>
+          </div>
 
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("resumo")
-            }
-          >
-            <strong>
+          <span style={estilos.descricaoEtapa}>
+            Equipamentos, equipe e custos
+          </span>
+        </button>
+
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("resumo")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               5. Resumo Financeiro
             </strong>
 
-            <span>
-              Custos, BDI e valor final
+            <span
+              style={
+                etapaConcluida("resumo")
+                  ? estilos.statusConcluido
+                  : estilos.statusPendente
+              }
+            >
+              {etapaConcluida("resumo")
+                ? "✓ Disponível"
+                : "○ Pendente"}
             </span>
-          </button>
+          </div>
 
-          <button
-            style={estilos.etapa}
-            onClick={() =>
-              abrirEtapa("relatorio")
-            }
-          >
-            <strong>
+          <span style={estilos.descricaoEtapa}>
+            Custos, BDI e valor final
+          </span>
+        </button>
+
+        <button
+          style={estilos.etapa}
+          onClick={() =>
+            abrirEtapa("relatorio")
+          }
+        >
+          <div style={estilos.cabecalhoEtapa}>
+            <strong style={estilos.tituloEtapa}>
               6. Relatório
             </strong>
 
-            <span>
-              Relatório final em PDF
+            <span
+              style={
+                etapaConcluida("relatorio")
+                  ? estilos.statusConcluido
+                  : estilos.statusPendente
+              }
+            >
+              {etapaConcluida("relatorio")
+                ? "✓ Disponível"
+                : "○ Pendente"}
             </span>
-          </button>
-        </div>
+          </div>
+
+          <span style={estilos.descricaoEtapa}>
+            Relatório final em PDF
+          </span>
+        </button>
+      </div>
+
+        {projeto.status === "FINALIZADO" && (
+            <div style={estilos.areaReabrir}>
+              <button
+                type="button"
+                onClick={() =>
+                  setModalReabrirAberto(true)
+                }
+                style={estilos.botaoReabrir}
+              >
+                Reabrir projeto
+              </button>
+            </div>
+          )}
       </section>
+
+      {modalReabrirAberto && (
+        <div
+          style={estilos.overlayModal}
+          onClick={() =>
+            !reabrindo &&
+            setModalReabrirAberto(false)
+          }
+        >
+          <div
+            style={estilos.modal}
+            onClick={(evento) =>
+              evento.stopPropagation()
+            }
+          >
+            <div style={estilos.iconeModal}>
+              ↻
+            </div>
+
+            <h2 style={estilos.tituloModal}>
+              Reabrir projeto?
+            </h2>
+
+            <p style={estilos.textoModal}>
+              O projeto voltará para a etapa de
+              montagem calculada e poderá ser
+              alterado novamente.
+            </p>
+
+            <div style={estilos.avisoModal}>
+              <strong>Atenção</strong>
+
+              <span>
+                Após a reabertura, Fabricação,
+                Logística e Montagem poderão ser
+                editadas novamente. Depois das
+                alterações, será necessário revisar
+                os valores e finalizar o projeto
+                novamente.
+              </span>
+            </div>
+
+            <div style={estilos.acoesModal}>
+              <button
+                type="button"
+                onClick={() =>
+                  setModalReabrirAberto(false)
+                }
+                disabled={reabrindo}
+                style={estilos.botaoCancelarModal}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={reabrirProjeto}
+                disabled={reabrindo}
+                style={estilos.botaoConfirmarModal}
+              >
+                {reabrindo
+                  ? "Reabrindo..."
+                  : "Sim, reabrir projeto"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -519,4 +795,151 @@ const estilos = {
       "column" as const,
     gap: "7px",
   },
+  cabecalhoEtapa: {
+  width: "100%",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "10px",
+  },
+
+  tituloEtapa: {
+    fontSize: "15px",
+    color: "#111827",
+  },
+
+  descricaoEtapa: {
+    color: "#6b7280",
+    fontSize: "13px",
+    lineHeight: 1.5,
+  },
+
+  statusConcluido: {
+    background: "#dcfce7",
+    color: "#166534",
+    border: "1px solid #bbf7d0",
+    borderRadius: "20px",
+    padding: "5px 9px",
+    fontSize: "11px",
+    fontWeight: 600,
+    whiteSpace: "nowrap" as const,
+  },
+
+  statusPendente: {
+    background: "#f3f4f6",
+    color: "#6b7280",
+    border: "1px solid #e5e7eb",
+    borderRadius: "20px",
+    padding: "5px 9px",
+    fontSize: "11px",
+    fontWeight: 600,
+    whiteSpace: "nowrap" as const,
+  },
+  botaoReabrir: {
+  background: "rgb(229, 231, 235)",
+  color: "#000000",
+  border: "none",
+  borderRadius: "8px",
+  padding: "12px 18px",
+  cursor: "pointer",
+  fontWeight: 600,
+  fontSize: "14px",
+  },
+  areaReabrir: {
+    marginTop: "30px",
+    paddingTop: "20px",
+    borderTop: "1px solid #e5e7eb",
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+
+overlayModal: {
+  position: "fixed" as const,
+  inset: 0,
+  background: "rgba(17, 24, 39, 0.65)",
+  backdropFilter: "blur(2px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "20px",
+  zIndex: 9999,
+},
+
+modal: {
+  width: "100%",
+  maxWidth: "480px",
+  background: "#ffffff",
+  borderRadius: "22px",
+  padding: "32px",
+  border: "1px solid #e5e7eb",
+  boxShadow:
+    "0 25px 60px rgba(0, 0, 0, 0.30)",
+},
+
+iconeModal: {
+  width: "52px",
+  height: "52px",
+  borderRadius: "16px",
+  background: "#111827",
+  color: "#ffffff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "25px",
+  fontWeight: 700,
+  marginBottom: "20px",
+},
+
+tituloModal: {
+  margin: 0,
+  color: "#111827",
+  fontSize: "23px",
+},
+
+textoModal: {
+  margin: "10px 0 20px",
+  color: "#6b7280",
+  fontSize: "14px",
+  lineHeight: 1.6,
+},
+
+avisoModal: {
+  background: "#f9fafb",
+  border: "1px solid #e5e7eb",
+  borderRadius: "14px",
+  padding: "16px",
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "6px",
+  color: "#4b5563",
+  fontSize: "13px",
+  lineHeight: 1.5,
+},
+
+acoesModal: {
+  marginTop: "25px",
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "10px",
+},
+
+botaoCancelarModal: {
+  background: "#ffffff",
+  color: "#374151",
+  border: "1px solid #d1d5db",
+  borderRadius: "10px",
+  padding: "12px 18px",
+  cursor: "pointer",
+  fontWeight: 600,
+},
+
+botaoConfirmarModal: {
+  background: "#111827",
+  color: "#ffffff",
+  border: "none",
+  borderRadius: "10px",
+  padding: "12px 18px",
+  cursor: "pointer",
+  fontWeight: 600,
+},
 };
