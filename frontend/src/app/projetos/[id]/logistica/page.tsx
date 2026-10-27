@@ -894,19 +894,19 @@ export default function LogisticaPage() {
         return;
         }
 
-        const detalhes = dados.detalhes || {};
+        if (dados.tipoFrete === "TERCEIRIZADO") {
+        setCustosLogistica({
+            tipo: "TERCEIRIZADO",
 
-        const transporte =
-        detalhes.transporte || {};
+            custoTotalLogistica:
+            dados.custoLogistica ?? 0,
+        });
 
-        const combustivel =
-        detalhes.combustivel || {};
-
-        const custos =
-        detalhes.custos || {};
+        return;
+        }
 
         setCustosLogistica({
-        tipo: dados.tipoFrete,
+        tipo: "PROPRIO",
 
         distanciaTotalKm:
             dados.detalhes.transporte.kmTotal,
@@ -947,6 +947,7 @@ export default function LogisticaPage() {
         custoTotalLogistica:
             dados.custoLogistica,
         });
+
     } catch {
         setErroCustos(
         "Não foi possível conectar ao servidor."
@@ -1882,6 +1883,141 @@ export default function LogisticaPage() {
             </div>
         </div>
         )}
+
+        {tipoFrete === "TERCEIRIZADO" && (
+        <div style={estilos.cardSecundario}>
+            <div style={estilos.cabecalhoSugestao}>
+            <div>
+                <h3 style={estilos.tituloSugestao}>
+                Cálculo da Logística
+                </h3>
+
+                <p style={estilos.descricaoSugestao}>
+                Calcule o custo total com base
+                na cotação da transportadora.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                onClick={calcularCustosLogistica}
+                disabled={calculandoCustos}
+                style={estilos.botaoCalcular}
+            >
+                {calculandoCustos
+                ? "Calculando..."
+                : "Calcular logística"}
+            </button>
+            </div>
+
+            {erroCustos && (
+            <div style={estilos.erro}>
+                {erroCustos}
+            </div>
+            )}
+
+            {custosLogistica &&
+            custosLogistica.tipo ===
+                "TERCEIRIZADO" && (
+                <>
+                <div style={estilos.resumoCustos}>
+                    <div style={estilos.indicadorSugestao}>
+                    <span>
+                        Modalidade
+                    </span>
+
+                    <strong>
+                        Frete Terceirizado
+                    </strong>
+                    </div>
+
+                    <div style={estilos.indicadorSugestao}>
+                    <span>
+                        Transportadora
+                    </span>
+
+                    <strong>
+                        {empresa || "-"}
+                    </strong>
+                    </div>
+
+                    <div style={estilos.indicadorSugestao}>
+                    <span>
+                        Nº da cotação
+                    </span>
+
+                    <strong>
+                        {numeroCotacao || "-"}
+                    </strong>
+                    </div>
+                </div>
+
+                <div style={estilos.totalLogistica}>
+                    <span>
+                    CUSTO TOTAL DA LOGÍSTICA
+                    </span>
+
+                    <strong>
+                    {formatarMoeda(
+                        custosLogistica
+                        .custoTotalLogistica
+                    )}
+                    </strong>
+                </div>
+
+                <div
+                    style={
+                    estilos.confirmacaoLogistica
+                    }
+                >
+                    {logisticaConfirmada ? (
+                    <>
+                        <div
+                        style={
+                            estilos.sucessoConfirmacao
+                        }
+                        >
+                        {sucessoConfirmacao}
+                        </div>
+
+                        <button
+                        type="button"
+                        style={
+                            estilos.botaoContinuar
+                        }
+                        onClick={() =>
+                            router.push(
+                            `/projetos/${id}/montagem`
+                            )
+                        }
+                        >
+                        Continuar para montagem →
+                        </button>
+                    </>
+                    ) : (
+                    <button
+                        type="button"
+                        onClick={
+                        confirmarLogistica
+                        }
+                        disabled={
+                        confirmandoLogistica
+                        }
+                        style={
+                        estilos.botaoConfirmar
+                        }
+                    >
+                        {confirmandoLogistica
+                        ? "Confirmando..."
+                        : "Confirmar logística"}
+                    </button>
+                    )}
+                </div>
+                </>
+            )}
+        </div>
+        )}
+
       </section>
     </main>
   );
