@@ -141,7 +141,58 @@ export default function ProjetoPage() {
     }
   }
 
+  function etapaDisponivel(etapa: string) {
+    if (!projeto) {
+      return false;
+    }
+
+    const status = projeto.status;
+
+    const ordem = [
+      "RASCUNHO",
+      "IMPORTACAO_PENDENTE",
+      "FABRICACAO_CALCULADA",
+      "LOGISTICA_CALCULADA",
+      "MONTAGEM_CALCULADA",
+      "FINALIZADO",
+    ];
+
+    const indiceAtual =
+      ordem.indexOf(status);
+
+    // Ainda não temos um status específico
+    // para "importação concluída".
+    if (etapa === "importacao") {
+      return true;
+    }
+
+    if (etapa === "fabricacao") {
+      return true;
+    }
+
+    if (etapa === "logistica") {
+      return indiceAtual >= 2;
+    }
+
+    if (etapa === "montagem") {
+      return indiceAtual >= 3;
+    }
+
+    if (etapa === "resumo") {
+      return indiceAtual >= 4;
+    }
+
+    if (etapa === "relatorio") {
+      return status === "FINALIZADO";
+    }
+
+    return false;
+  }
+
   function etapaConcluida(etapa: string) {
+    if (!projeto) {
+      return false;
+    }
     const status = projeto.status;
 
     const ordem = [
@@ -180,24 +231,25 @@ export default function ProjetoPage() {
   }
 
   function textoStatusEtapa(
-    etapa: string
-  ) {
-    if (etapa === "resumo") {
+      etapa: string
+    ) {
+      if (!etapaDisponivel(etapa)) {
+        return "Bloqueada";
+      }
+
+      if (
+        etapa === "resumo" ||
+        etapa === "relatorio"
+      ) {
+        return etapaConcluida(etapa)
+          ? "Disponível"
+          : "Pendente";
+      }
+
       return etapaConcluida(etapa)
-        ? "Disponível"
+        ? "Concluída"
         : "Pendente";
     }
-
-    if (etapa === "relatorio") {
-      return etapaConcluida(etapa)
-        ? "Disponível"
-        : "Pendente";
-    }
-
-    return etapaConcluida(etapa)
-      ? "Concluída"
-      : "Pendente";
-  }
 
   function formatarStatus(status: string) {
     const nomes: Record<string, string> = {
@@ -437,57 +489,79 @@ export default function ProjetoPage() {
           </span>
         </button>
 
-        <button
-          style={estilos.etapa}
-          onClick={() =>
-            abrirEtapa("logistica")
-          }
-        >
+          <button
+            disabled={
+              !etapaDisponivel("logistica")
+            }
+            style={{
+              ...estilos.etapa,
+              ...(!etapaDisponivel("logistica")
+                ? estilos.etapaBloqueada
+                : {}),
+            }}
+            onClick={() =>
+              abrirEtapa("logistica")
+            }
+          >
           <div style={estilos.cabecalhoEtapa}>
             <strong style={estilos.tituloEtapa}>
               3. Logística
             </strong>
-
-            <span
-              style={
-                etapaConcluida("logistica")
-                  ? estilos.statusConcluido
-                  : estilos.statusPendente
-              }
-            >
-              {etapaConcluida("logistica")
-                ? "✓ Concluída"
-                : "○ Pendente"}
-            </span>
+          <span
+            style={
+              etapaConcluida("logistica")
+                ? estilos.statusConcluido
+                : etapaDisponivel("logistica")
+                  ? estilos.statusPendente
+                  : estilos.statusBloqueado
+            }
+          >
+            {etapaConcluida("logistica")
+              ? "✓ Concluída"
+              : etapaDisponivel("logistica")
+                ? "○ Pendente"
+                : "🔒 Bloqueada"}
+          </span>
           </div>
-
           <span style={estilos.descricaoEtapa}>
             Frete próprio ou terceirizado
           </span>
         </button>
 
-        <button
-          style={estilos.etapa}
-          onClick={() =>
-            abrirEtapa("montagem")
-          }
-        >
+          <button
+            disabled={
+              !etapaDisponivel("montagem")
+            }
+            style={{
+              ...estilos.etapa,
+              ...(!etapaDisponivel("montagem")
+                ? estilos.etapaBloqueada
+                : {}),
+            }}
+            onClick={() =>
+              abrirEtapa("montagem")
+            }
+          >
           <div style={estilos.cabecalhoEtapa}>
             <strong style={estilos.tituloEtapa}>
               4. Montagem
             </strong>
 
-            <span
-              style={
-                etapaConcluida("montagem")
-                  ? estilos.statusConcluido
-                  : estilos.statusPendente
-              }
-            >
-              {etapaConcluida("montagem")
-                ? "✓ Concluída"
-                : "○ Pendente"}
-            </span>
+          <span
+            style={
+              etapaConcluida("montagem")
+                ? estilos.statusConcluido
+                : etapaDisponivel("montagem")
+                  ? estilos.statusPendente
+                  : estilos.statusBloqueado
+            }
+          >
+            {etapaConcluida("montagem")
+              ? "✓ Concluída"
+              : etapaDisponivel("montagem")
+                ? "○ Pendente"
+                : "🔒 Bloqueada"}
+          </span>
           </div>
 
           <span style={estilos.descricaoEtapa}>
@@ -495,28 +569,40 @@ export default function ProjetoPage() {
           </span>
         </button>
 
-        <button
-          style={estilos.etapa}
-          onClick={() =>
-            abrirEtapa("resumo")
-          }
-        >
+          <button
+            disabled={
+              !etapaDisponivel("resumo")
+            }
+            style={{
+              ...estilos.etapa,
+              ...(!etapaDisponivel("resumo")
+                ? estilos.etapaBloqueada
+                : {}),
+            }}
+            onClick={() =>
+              abrirEtapa("resumo")
+            }
+          >
           <div style={estilos.cabecalhoEtapa}>
             <strong style={estilos.tituloEtapa}>
               5. Resumo Financeiro
             </strong>
 
-            <span
-              style={
-                etapaConcluida("resumo")
-                  ? estilos.statusConcluido
-                  : estilos.statusPendente
-              }
-            >
-              {etapaConcluida("resumo")
-                ? "✓ Disponível"
-                : "○ Pendente"}
-            </span>
+          <span
+            style={
+              etapaConcluida("resumo")
+                ? estilos.statusConcluido
+                : etapaDisponivel("resumo")
+                  ? estilos.statusPendente
+                  : estilos.statusBloqueado
+            }
+          >
+            {etapaConcluida("resumo")
+              ? "✓ Disponível"
+              : etapaDisponivel("resumo")
+                ? "○ Pendente"
+                : "🔒 Bloqueada"}
+          </span>
           </div>
 
           <span style={estilos.descricaoEtapa}>
@@ -524,28 +610,36 @@ export default function ProjetoPage() {
           </span>
         </button>
 
-        <button
-          style={estilos.etapa}
-          onClick={() =>
-            abrirEtapa("relatorio")
-          }
-        >
+          <button
+            disabled={
+              !etapaDisponivel("relatorio")
+            }
+            style={{
+              ...estilos.etapa,
+              ...(!etapaDisponivel("relatorio")
+                ? estilos.etapaBloqueada
+                : {}),
+            }}
+            onClick={() =>
+              abrirEtapa("relatorio")
+            }
+          >
           <div style={estilos.cabecalhoEtapa}>
             <strong style={estilos.tituloEtapa}>
               6. Relatório
             </strong>
 
-            <span
-              style={
-                etapaConcluida("relatorio")
-                  ? estilos.statusConcluido
-                  : estilos.statusPendente
-              }
-            >
-              {etapaConcluida("relatorio")
-                ? "✓ Disponível"
-                : "○ Pendente"}
-            </span>
+          <span
+            style={
+              etapaConcluida("relatorio")
+                ? estilos.statusConcluido
+                : estilos.statusBloqueado
+            }
+          >
+            {etapaConcluida("relatorio")
+              ? "✓ Disponível"
+              : "🔒 Bloqueada"}
+          </span>
           </div>
 
           <span style={estilos.descricaoEtapa}>
@@ -834,6 +928,22 @@ const estilos = {
     fontSize: "11px",
     fontWeight: 600,
     whiteSpace: "nowrap" as const,
+  },
+  statusBloqueado: {
+    background: "#f3f4f6",
+    color: "#9ca3af",
+    border: "1px solid #e5e7eb",
+    borderRadius: "20px",
+    padding: "5px 9px",
+    fontSize: "11px",
+    fontWeight: 600,
+    whiteSpace: "nowrap" as const,
+  },
+
+  etapaBloqueada: {
+    background: "#f9fafb",
+    opacity: 0.6,
+    cursor: "not-allowed",
   },
   botaoReabrir: {
   background: "rgb(229, 231, 235)",
