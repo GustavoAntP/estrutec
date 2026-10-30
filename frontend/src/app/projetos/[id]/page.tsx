@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+
 import { apiAutenticada } from "@/servicos/api";
+import { tema } from "@/estilos/tema";
 
 type Projeto = {
   id: number;
@@ -312,48 +315,87 @@ export default function ProjetoPage() {
 
   return (
     <main style={estilos.pagina}>
-      <header style={estilos.cabecalho}>
+    <header style={estilos.cabecalho}>
+      <div style={estilos.areaMarca}>
+        <Image
+          src="/estrutec-logo.png"
+          alt="Estrutec"
+          width={150}
+          height={90}
+          priority
+          style={estilos.logoImagem}
+        />
+
+        <div style={estilos.divisorCabecalho} />
+
         <div>
-          <h1 style={estilos.logo}>
-            ESTRUTEC
-          </h1>
-
-          <p style={estilos.subtitulo}>
+          <strong style={estilos.nomeArea}>
             Projeto {projeto.codigo}
-          </p>
-        </div>
+          </strong>
 
-        <button
-          style={estilos.botaoVoltar}
-          onClick={() =>
-            router.push("/painel")
-          }
-        >
-          ← Voltar ao painel
-        </button>
-      </header>
-
-      <section style={estilos.conteudo}>
-        <div style={estilos.topoProjeto}>
-          <div>
-            <p style={estilos.codigo}>
-              {projeto.codigo}
-            </p>
-
-            <h2 style={estilos.tituloProjeto}>
-              {projeto.nome}
-            </h2>
-
-            <p style={estilos.cliente}>
-              {projeto.cliente}
-            </p>
-          </div>
-          <span style={estilos.status}>
-            {formatarStatus(
-              projeto.status
-            )}
+          <span style={estilos.descricaoArea}>
+            Orçamento e planejamento
           </span>
         </div>
+      </div>
+
+      <button
+        type="button"
+        style={estilos.botaoVoltar}
+        onClick={() =>
+          router.push("/painel")
+        }
+      >
+        ← Voltar ao painel
+      </button>
+    </header>
+
+      <section style={estilos.conteudo}>
+      <div style={estilos.topoProjeto}>
+        <div>
+          <span style={estilos.sobretitulo}>
+            PROJETO
+          </span>
+
+          <h1 style={estilos.tituloProjeto}>
+            {projeto.nome}
+          </h1>
+
+          <div style={estilos.informacoesTopo}>
+            <span>
+              <strong>
+                {projeto.codigo}
+              </strong>
+            </span>
+
+            <span style={estilos.separadorTopo}>
+              •
+            </span>
+
+            <span>
+              {projeto.cliente}
+            </span>
+          </div>
+        </div>
+
+        <span
+          style={{
+            ...estilos.statusProjeto,
+
+            ...(projeto.status === "FINALIZADO"
+              ? estilos.statusFinalizado
+              : estilos.statusAndamento),
+          }}
+        >
+          {projeto.status === "FINALIZADO"
+            ? "✓ "
+            : "● "}
+
+          {formatarStatus(
+            projeto.status
+          )}
+        </span>
+      </div>
         <div style={estilos.grid}>
           <div style={estilos.cardDados}>
             <h3 style={estilos.tituloCard}>
@@ -451,7 +493,7 @@ export default function ProjetoPage() {
             </strong>
 
             <span style={estilos.statusPendente}>
-              ○ Planilha
+              ● Entrada
             </span>
           </div>
 
@@ -737,8 +779,15 @@ export default function ProjetoPage() {
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif",
+
+    background:
+      tema.cores.fundo,
+
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
+
+    color:
+      tema.cores.grafite,
   },
 
   centralizado: {
@@ -750,74 +799,183 @@ const estilos = {
   },
 
   cabecalho: {
-    minHeight: "80px",
-    background: "#ffffff",
+    minHeight: "88px",
+
+    background:
+      tema.cores.branco,
+
     borderBottom:
-      "1px solid #e5e7eb",
-    padding: "16px 40px",
+      `1px solid ${tema.cores.borda}`,
+
+    padding: "14px 24px",
+
     display: "flex",
     alignItems: "center",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
+
+    gap: "20px",
+
+    boxShadow:
+      "0 1px 4px rgba(23, 23, 23, 0.04)",
+  },
+  areaMarca: {
+  display: "flex",
+  alignItems: "center",
+  gap: "20px",
   },
 
-  logo: {
-    margin: 0,
-    fontSize: "24px",
+  logoImagem: {
+    width: "125px",
+    height: "auto",
+
+    objectFit:
+      "contain" as const,
   },
 
-  subtitulo: {
-    margin: "4px 0 0",
-    color: "#6b7280",
+  divisorCabecalho: {
+    width: "1px",
+    height: "38px",
+
+    background:
+      tema.cores.borda,
+  },
+
+  nomeArea: {
+    display: "block",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "14px",
+  },
+
+  descricaoArea: {
+    display: "block",
+
+    marginTop: "3px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+  },
+  botaoVoltar: {
+    height: "42px",
+
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    padding: "0 15px",
+
+    cursor: "pointer",
+
+    fontWeight: 600,
     fontSize: "13px",
   },
 
-  botaoVoltar: {
-    background: "#ffffff",
-    border:
-      "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "10px 15px",
-    cursor: "pointer",
-  },
-
   conteudo: {
-    padding: "35px 40px",
-    maxWidth: "1300px",
+    width: "100%",
+    maxWidth: "1600px",
+
     margin: "0 auto",
+
+    padding: "38px 24px 60px",
+
+    boxSizing:
+      "border-box" as const,
   },
 
   topoProjeto: {
     display: "flex",
+
     justifyContent:
       "space-between",
+
     alignItems: "center",
-    marginBottom: "25px",
+
+    gap: "25px",
+
+    marginBottom: "26px",
   },
 
-  codigo: {
-    margin: 0,
-    color: "#6b7280",
+  sobretitulo: {
+  color:
+    tema.cores.laranja,
+
+  fontSize: "11px",
+  fontWeight: 800,
+
+  letterSpacing: "1.5px",
+  },
+
+  informacoesTopo: {
+    display: "flex",
+    alignItems: "center",
+
+    gap: "8px",
+
+    marginTop: "8px",
+
+    color:
+      tema.cores.textoSecundario,
+
     fontSize: "13px",
-    fontWeight: 600,
+  },
+
+  separadorTopo: {
+    color:
+      tema.cores.laranja,
+  },
+
+  statusProjeto: {
+    padding: "8px 13px",
+
+    borderRadius: "20px",
+
+    fontSize: "12px",
+    fontWeight: 700,
+
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  statusFinalizado: {
+    background: "#DCFCE7",
+
+    color: "#166534",
+
+    border:
+      "1px solid #BBF7D0",
+  },
+
+  statusAndamento: {
+    background:
+      tema.cores.avisoFundo,
+
+    color: "#C2410C",
+
+    border:
+      "1px solid #FED7AA",
   },
 
   tituloProjeto: {
-    margin: "5px 0",
-    fontSize: "28px",
-  },
+    margin: "7px 0 0",
 
-  cliente: {
-    margin: 0,
-    color: "#6b7280",
-  },
+    color:
+      tema.cores.grafite,
 
-  status: {
-    padding: "8px 14px",
-    borderRadius: "20px",
-    background: "#e5e7eb",
-    fontSize: "13px",
-    fontWeight: 600,
+    fontSize: "30px",
+
+    letterSpacing: "-0.5px",
   },
 
   grid: {
@@ -828,18 +986,29 @@ const estilos = {
   },
 
   cardDados: {
-    background: "#ffffff",
+    background:
+      tema.cores.branco,
+
     border:
-      "1px solid #e5e7eb",
-    borderRadius: "9px",
-    padding: "25px",
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.grande,
+
+    padding: "26px",
+
+    boxShadow:
+      tema.sombras.card,
   },
 
   tituloCard: {
     margin: "0 0 22px",
-    fontSize: "18px",
-  },
 
+    color:
+      tema.cores.grafite,
+
+    fontSize: "17px",
+  },
   dados: {
     display: "grid",
     gridTemplateColumns:
@@ -849,45 +1018,85 @@ const estilos = {
 
   rotulo: {
     display: "block",
-    color: "#6b7280",
-    fontSize: "12px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+    fontWeight: 600,
+
     marginBottom: "5px",
+
+    textTransform:
+      "uppercase" as const,
+
+    letterSpacing: "0.5px",
   },
 
   observacoes: {
     marginTop: "22px",
+
     paddingTop: "18px",
+
     borderTop:
-      "1px solid #e5e7eb",
+      `1px solid ${tema.cores.borda}`,
+
+    color:
+      tema.cores.grafite,
+
     fontSize: "14px",
   },
 
   tituloEtapas: {
-    margin:
-      "32px 0 16px",
+    margin: "34px 0 16px",
+
+    color:
+      tema.cores.grafite,
+
     fontSize: "18px",
   },
 
   etapas: {
     display: "grid",
+
     gridTemplateColumns:
-      "repeat(auto-fit, minmax(260px, 1fr))",
-    gap: "15px",
+      "repeat(auto-fit, minmax(280px, 1fr))",
+
+    gap: "16px",
   },
 
   etapa: {
-    minHeight: "100px",
+    position: "relative" as const,
+
+    minHeight: "125px",
+
     padding: "20px",
-    background: "#ffffff",
+
+    background:
+      tema.cores.branco,
+
     border:
-      "1px solid #e5e7eb",
-    borderRadius: "8px",
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.media,
+
     cursor: "pointer",
+
     textAlign: "left" as const,
+
     display: "flex",
+
     flexDirection:
       "column" as const,
-    gap: "7px",
+
+    justifyContent:
+      "space-between",
+
+    gap: "14px",
+
+    boxShadow:
+      tema.sombras.card,
   },
   cabecalhoEtapa: {
   width: "100%",
@@ -899,157 +1108,278 @@ const estilos = {
 
   tituloEtapa: {
     fontSize: "15px",
-    color: "#111827",
+
+    color:
+      tema.cores.grafite,
   },
 
   descricaoEtapa: {
-    color: "#6b7280",
+    color:
+      tema.cores.textoSecundario,
+
     fontSize: "13px",
+
     lineHeight: 1.5,
   },
 
   statusConcluido: {
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
+    background:
+      tema.cores.sucessoFundo,
+
+    color:
+      "#166534",
+
+    border:
+      "1px solid #BBF7D0",
+
     borderRadius: "20px",
+
     padding: "5px 9px",
+
     fontSize: "11px",
-    fontWeight: 600,
-    whiteSpace: "nowrap" as const,
+
+    fontWeight: 700,
+
+    whiteSpace:
+      "nowrap" as const,
   },
 
   statusPendente: {
-    background: "#f3f4f6",
-    color: "#6b7280",
-    border: "1px solid #e5e7eb",
+    background:
+      tema.cores.avisoFundo,
+
+    color:
+      "#C2410C",
+
+    border:
+      "1px solid #FED7AA",
+
     borderRadius: "20px",
+
     padding: "5px 9px",
+
     fontSize: "11px",
-    fontWeight: 600,
-    whiteSpace: "nowrap" as const,
+
+    fontWeight: 700,
+
+    whiteSpace:
+      "nowrap" as const,
   },
   statusBloqueado: {
-    background: "#f3f4f6",
-    color: "#9ca3af",
-    border: "1px solid #e5e7eb",
+    background:
+      tema.cores.cinza,
+
+    color:
+      tema.cores.bloqueado,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
     borderRadius: "20px",
+
     padding: "5px 9px",
+
     fontSize: "11px",
-    fontWeight: 600,
-    whiteSpace: "nowrap" as const,
+
+    fontWeight: 700,
+
+    whiteSpace:
+      "nowrap" as const,
   },
 
   etapaBloqueada: {
-    background: "#f9fafb",
-    opacity: 0.6,
+    background:
+      "#FAFAF9",
+
+    opacity: 0.55,
+
     cursor: "not-allowed",
   },
   botaoReabrir: {
-  background: "rgb(229, 231, 235)",
-  color: "#000000",
-  border: "none",
-  borderRadius: "8px",
-  padding: "12px 18px",
-  cursor: "pointer",
-  fontWeight: 600,
-  fontSize: "14px",
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    padding: "11px 17px",
+
+    cursor: "pointer",
+
+    fontWeight: 700,
+    fontSize: "13px",
   },
   areaReabrir: {
     marginTop: "30px",
+
     paddingTop: "20px",
-    borderTop: "1px solid #e5e7eb",
+
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
+
     display: "flex",
-    justifyContent: "flex-end",
+
+    justifyContent:
+      "flex-end",
   },
 
-overlayModal: {
-  position: "fixed" as const,
-  inset: 0,
-  background: "rgba(17, 24, 39, 0.65)",
-  backdropFilter: "blur(2px)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "20px",
-  zIndex: 9999,
-},
+  overlayModal: {
+    position: "fixed" as const,
+    inset: 0,
 
-modal: {
-  width: "100%",
-  maxWidth: "480px",
-  background: "#ffffff",
-  borderRadius: "22px",
-  padding: "32px",
-  border: "1px solid #e5e7eb",
-  boxShadow:
-    "0 25px 60px rgba(0, 0, 0, 0.30)",
-},
+    background:
+      "rgba(23, 23, 23, 0.70)",
 
-iconeModal: {
-  width: "52px",
-  height: "52px",
-  borderRadius: "16px",
-  background: "#111827",
-  color: "#ffffff",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "25px",
-  fontWeight: 700,
-  marginBottom: "20px",
-},
+    backdropFilter:
+      "blur(4px)",
 
-tituloModal: {
-  margin: 0,
-  color: "#111827",
-  fontSize: "23px",
-},
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
 
-textoModal: {
-  margin: "10px 0 20px",
-  color: "#6b7280",
-  fontSize: "14px",
-  lineHeight: 1.6,
-},
+    padding: "20px",
 
-avisoModal: {
-  background: "#f9fafb",
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "16px",
-  display: "flex",
-  flexDirection: "column" as const,
-  gap: "6px",
-  color: "#4b5563",
-  fontSize: "13px",
-  lineHeight: 1.5,
-},
+    zIndex: 9999,
+  },
 
-acoesModal: {
-  marginTop: "25px",
-  display: "flex",
-  justifyContent: "flex-end",
-  gap: "10px",
-},
+  modal: {
+    width: "100%",
+    maxWidth: "470px",
 
-botaoCancelarModal: {
-  background: "#ffffff",
-  color: "#374151",
-  border: "1px solid #d1d5db",
-  borderRadius: "10px",
-  padding: "12px 18px",
-  cursor: "pointer",
-  fontWeight: 600,
-},
+    background:
+      tema.cores.branco,
 
-botaoConfirmarModal: {
-  background: "#111827",
-  color: "#ffffff",
-  border: "none",
-  borderRadius: "10px",
-  padding: "12px 18px",
-  cursor: "pointer",
-  fontWeight: 600,
-},
+    borderRadius:
+      tema.bordas.modal,
+
+    padding: "30px",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    boxShadow:
+      tema.sombras.destaque,
+  },
+
+  iconeModal: {
+    width: "52px",
+    height: "52px",
+
+    borderRadius: "16px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    display: "flex",
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    fontSize: "25px",
+    fontWeight: 700,
+
+    marginBottom: "20px",
+  },
+
+  tituloModal: {
+    margin: 0,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "23px",
+  },
+
+  textoModal: {
+    margin: "10px 0 20px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "14px",
+
+    lineHeight: 1.6,
+  },
+
+  avisoModal: {
+    background:
+      tema.cores.avisoFundo,
+
+    border:
+      "1px solid #FED7AA",
+
+    borderRadius:
+      tema.bordas.media,
+
+    padding: "16px",
+
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    gap: "6px",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "13px",
+
+    lineHeight: 1.5,
+  },
+
+  acoesModal: {
+    marginTop: "25px",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+  },
+
+  botaoCancelarModal: {
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    padding: "12px 18px",
+
+    cursor: "pointer",
+
+    fontWeight: 600,
+  },
+
+  botaoConfirmarModal: {
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    border: "none",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    padding: "12px 18px",
+
+    cursor: "pointer",
+
+    fontWeight: 700,
+  },
 };
