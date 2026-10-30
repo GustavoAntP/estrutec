@@ -15,6 +15,7 @@ const LogisticaPropria = require("./modelos/LogisticaPropria");
 const MontagemProjeto = require("./modelos/MontagemProjeto");
 const EquipamentoMontagem = require("./modelos/EquipamentoMontagem");
 const EquipeMontagem = require("./modelos/EquipeMontagem");
+const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use("/usuarios", usuarioRotas);
 app.use("/auth", authRotas);
 app.use("/projetos", projetoRotas);
+app.use("/auth",recuperacaoSenhaRotas);
 
 
 
