@@ -84,6 +84,10 @@ export default function LoginPage() {
         "estrutec_token",
         dados.token
       );
+      localStorage.setItem(
+        "estrutec_usuario",
+        JSON.stringify(dados.usuario)
+      );
 
       router.push("/painel");
     } catch {

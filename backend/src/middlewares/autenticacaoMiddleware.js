@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 
 function autenticar(req, res, next) {
-  const autorizacao = req.headers.authorization;
+  const autorizacao =
+    req.headers.authorization;
 
   if (!autorizacao) {
     return res.status(401).json({
@@ -9,26 +10,39 @@ function autenticar(req, res, next) {
     });
   }
 
-  const [tipo, token] = autorizacao.split(" ");
+  const [tipo, token] =
+    autorizacao.split(" ");
 
-  if (tipo !== "Bearer" || !token) {
+  if (
+    tipo !== "Bearer" ||
+    !token
+  ) {
     return res.status(401).json({
-      erro: "Formato de token inválido.",
+      erro:
+        "Formato de token inválido.",
     });
   }
 
   try {
-    const dados = jwt.verify(token, process.env.JWT_SECRET);
+    const dados = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    req.usuarioId = dados.id;
 
     req.usuario = {
       id: dados.id,
       nome: dados.nome,
+      email: dados.email,
+      perfil: dados.perfil,
     };
 
     next();
   } catch (erro) {
     return res.status(401).json({
-      erro: "Token inválido ou expirado.",
+      erro:
+        "Token inválido ou expirado.",
     });
   }
 }

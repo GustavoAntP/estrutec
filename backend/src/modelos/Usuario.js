@@ -37,6 +37,21 @@ const Usuario = sequelize.define(
       allowNull: false,
       defaultValue: true,
     },
+
+    perfil: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "OPERADOR",
+
+      validate: {
+        isIn: [
+          [
+            "ADMINISTRADOR",
+            "OPERADOR",
+          ],
+        ],
+      },
+    },
   },
   {
     tableName: "usuarios",

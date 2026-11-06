@@ -31,8 +31,30 @@ export default function PainelPage() {
   const [erro, setErro] =
     useState("");
 
+  const [usuarioLogado, setUsuarioLogado] =
+    useState<UsuarioLogado | null>(null);
+
   useEffect(() => {
     carregarProjetos();
+  }, []);
+
+  useEffect(() => {
+    const usuarioSalvo =
+      localStorage.getItem(
+        "estrutec_usuario"
+      );
+
+    if (usuarioSalvo) {
+      try {
+        setUsuarioLogado(
+          JSON.parse(usuarioSalvo)
+        );
+      } catch {
+        localStorage.removeItem(
+          "estrutec_usuario"
+        );
+      }
+    }
   }, []);
 
   async function carregarProjetos() {
@@ -179,6 +201,21 @@ export default function PainelPage() {
 
             Novo projeto
           </button>
+
+          {usuarioLogado?.perfil ===
+            "ADMINISTRADOR" && (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/administracao/usuarios"
+                )
+              }
+              style={estilos.botaoAdministracao}
+            >
+              Administração
+            </button>
+          )}
 
           <button
             type="button"
@@ -994,5 +1031,27 @@ const estilos = {
     cursor: "pointer",
 
     fontWeight: 700,
+  },
+  botaoAdministracao: {
+    height: "44px",
+
+    padding: "0 18px",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "13px",
+    fontWeight: 700,
+
+    cursor: "pointer",
   },
 };

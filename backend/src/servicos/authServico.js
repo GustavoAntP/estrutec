@@ -27,7 +27,7 @@ async function login(identificador, senha) {
   }
 
   if (!usuario.ativo) {
-    throw new Error("Usuário inativo.");
+    throw new Error("Usuário desativado. Entre em contato com o administrador.");
   }
 
   const senhaCorreta = await bcrypt.compare(
@@ -43,6 +43,8 @@ async function login(identificador, senha) {
     {
       id: usuario.id,
       nome: usuario.nome,
+      email: usuario.email,
+      perfil: usuario.perfil,
     },
     process.env.JWT_SECRET,
     {
@@ -52,11 +54,12 @@ async function login(identificador, senha) {
 
   return {
     token,
+
     usuario: {
       id: usuario.id,
       nome: usuario.nome,
-      cpf: usuario.cpf,
       email: usuario.email,
+      perfil: usuario.perfil,
     },
   };
 }
