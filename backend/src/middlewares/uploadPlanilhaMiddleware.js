@@ -7,9 +7,11 @@ const filtroArquivo = (req, arquivo, callback) => {
   const extensao = path.extname(arquivo.originalname).toLowerCase();
 
   if (extensao !== ".xlsx") {
-    return callback(
-      new Error("Apenas arquivos Excel no formato .xlsx são permitidos.")
+    const erro = new Error(
+      "Apenas arquivos Excel no formato .xlsx são permitidos."
     );
+    erro.status = 400;
+    return callback(erro);
   }
 
   callback(null, true);
