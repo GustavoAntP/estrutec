@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../configuracoes/banco");
 const Usuario = require("./Usuario");
+const ClienteEmpresa = require("./ClienteEmpresa");
 
 const Projeto = sequelize.define(
   "Projeto",
@@ -25,6 +26,17 @@ const Projeto = sequelize.define(
     cliente: {
       type: DataTypes.STRING(150),
       allowNull: false,
+    },
+
+    cliente_empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: ClienteEmpresa,
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
     },
 
     responsavel: {
@@ -96,6 +108,16 @@ Usuario.hasMany(Projeto, {
 Projeto.belongsTo(Usuario, {
   foreignKey: "usuario_id",
   as: "usuario",
+});
+
+ClienteEmpresa.hasMany(Projeto, {
+  foreignKey: "cliente_empresa_id",
+  as: "projetos",
+});
+
+Projeto.belongsTo(ClienteEmpresa, {
+  foreignKey: "cliente_empresa_id",
+  as: "clienteEmpresa",
 });
 
 module.exports = Projeto;

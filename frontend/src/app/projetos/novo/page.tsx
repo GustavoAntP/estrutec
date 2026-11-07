@@ -1,8 +1,16 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiAutenticada } from "@/servicos/api";
+
+type ClienteEmpresa = {
+  id: number;
+  razao_social: string;
+  nome_fantasia: string | null;
+  cnpj: string | null;
+  ativo: boolean;
+};
 
 export default function NovoProjetoPage() {
   const router = useRouter();
@@ -17,9 +25,63 @@ export default function NovoProjetoPage() {
   const [bdi, setBdi] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
+  const [
+    clientesEmpresas,
+    setClientesEmpresas,
+  ] = useState<ClienteEmpresa[]>([]);
+
+  const [
+    clienteEmpresaId,
+    setClienteEmpresaId,
+  ] = useState("");
+
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] =
     useState(false);
+
+  async function carregarClientesEmpresas() {
+    try {
+      const resposta =
+        await apiAutenticada(
+          "/clientes"
+        );
+
+      if (resposta.status === 401) {
+        localStorage.removeItem(
+          "estrutec_token"
+        );
+
+        router.push("/login");
+        return;
+      }
+
+      const dados =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(
+          dados.erro ||
+            "Não foi possível carregar as empresas clientes."
+        );
+      }
+
+      setClientesEmpresas(
+        dados.clientes.filter(
+          (cliente: ClienteEmpresa) =>
+            cliente.ativo
+        )
+      );
+    } catch (erro) {
+      console.error(
+        "Erro ao carregar empresas clientes:",
+        erro
+      );
+    }
+  }
+
+  useEffect(() => {
+    carregarClientesEmpresas();
+  }, []);
 
   async function cadastrarProjeto(
     evento: FormEvent<HTMLFormElement>
@@ -38,7 +100,11 @@ export default function NovoProjetoPage() {
           body: JSON.stringify({
             codigo,
             nome,
+
             cliente,
+
+            cliente_empresa_id:
+              Number(clienteEmpresaId),
 
             responsavel:
               responsavel || null,
@@ -50,7 +116,8 @@ export default function NovoProjetoPage() {
 
             prazo,
 
-            bdi: Number(bdi || 0),
+            bdi:
+              Number(bdi || 0),
 
             observacoes:
               observacoes || null,
@@ -165,39 +232,54 @@ export default function NovoProjetoPage() {
               </div>
             </div>
 
-            <div style={estilos.linha}>
-              <div style={estilos.campo}>
-                <label htmlFor="cliente">
-                  Cliente *
-                </label>
+            <div style={estilos.campo}>
+              <label htmlFor="cliente_empresa">
+                Empresa cliente *
+              </label>
 
-                <input
-                  id="cliente"
-                  value={cliente}
-                  onChange={(e) =>
-                    setCliente(e.target.value)
+              <select
+                id="cliente_empresa"
+                value={clienteEmpresaId}
+                onChange={(e) => {
+                  const id =
+                    e.target.value;
+
+                  setClienteEmpresaId(id);
+
+                  const empresa =
+                    clientesEmpresas.find(
+                      (cliente) =>
+                        String(cliente.id) === id
+                    );
+
+                  if (empresa) {
+                    setCliente(
+                      empresa.nome_fantasia ||
+                        empresa.razao_social
+                    );
+                  } else {
+                    setCliente("");
                   }
-                  required
-                  style={estilos.input}
-                />
-              </div>
+                }}
+                required
+                style={estilos.input}
+              >
+                <option value="">
+                  Selecione uma empresa cliente
+                </option>
 
-              <div style={estilos.campo}>
-                <label htmlFor="responsavel">
-                  Responsável
-                </label>
-
-                <input
-                  id="responsavel"
-                  value={responsavel}
-                  onChange={(e) =>
-                    setResponsavel(
-                      e.target.value
-                    )
-                  }
-                  style={estilos.input}
-                />
-              </div>
+                {clientesEmpresas.map(
+                  (empresa) => (
+                    <option
+                      key={empresa.id}
+                      value={empresa.id}
+                    >
+                      {empresa.nome_fantasia ||
+                        empresa.razao_social}
+                    </option>
+                  )
+                )}
+              </select>
             </div>
 
             <div style={estilos.linha}>

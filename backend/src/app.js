@@ -16,11 +16,13 @@ const MontagemProjeto = require("./modelos/MontagemProjeto");
 const EquipamentoMontagem = require("./modelos/EquipamentoMontagem");
 const EquipeMontagem = require("./modelos/EquipeMontagem");
 const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
+const ClienteEmpresa = require("./modelos/ClienteEmpresa");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
 const authRotas = require("./rotas/authRotas");
 const projetoRotas = require("./rotas/projetoRotas");
+const clienteEmpresaRotas = require("./rotas/clienteEmpresaRotas");
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.use("/usuarios", usuarioRotas);
 app.use("/auth", authRotas);
 app.use("/projetos", projetoRotas);
 app.use("/auth",recuperacaoSenhaRotas);
+app.use("/clientes", clienteEmpresaRotas);
 
 
 
