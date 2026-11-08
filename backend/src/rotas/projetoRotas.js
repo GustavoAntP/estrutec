@@ -54,7 +54,7 @@ router.get("/:id/logistica/propria", autenticar, logisticaPropriaControlador.bus
 router.put("/:id/logistica/propria", autenticar, verificarProjetoEditavel, logisticaPropriaControlador.salvar);
 router.get("/:id/logistica/propria/custos", autenticar, logisticaPropriaControlador.calcularCusto);
 router.get("/:id/logistica/propria/sugestao-viagens", autenticar, logisticaPropriaControlador.sugerirViagens);
-router.post("/:id/logistica/propria/aplicar-sugestao-viagens", verificarProjetoEditavel, autenticar, logisticaPropriaControlador.aplicarSugestao);
+router.post("/:id/logistica/propria/aplicar-sugestao-viagens", autenticar, verificarProjetoEditavel, logisticaPropriaControlador.aplicarSugestao);
 
 router.get("/:id/montagem", autenticar, montagemControlador.buscar);
 router.put("/:id/montagem", autenticar, verificarProjetoEditavel, montagemControlador.salvar);
