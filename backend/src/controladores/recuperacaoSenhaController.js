@@ -4,9 +4,6 @@ const crypto =
 const bcrypt =
   require("bcrypt");
 
-const { Op } =
-  require("sequelize");
-
 const Usuario =
   require("../modelos/Usuario");
 
@@ -43,18 +40,27 @@ async function solicitarRecuperacao(
     const valor =
       identificador.trim();
 
+    /*
+     * Normaliza como o cadastro grava:
+     * e-mail em minúsculas e CPF só
+     * com números. Sem isso, CPF com
+     * pontos ou e-mail com maiúscula
+     * nunca encontram o usuário.
+     */
+    const condicao =
+      valor.includes("@")
+        ? {
+            email:
+              valor.toLowerCase(),
+          }
+        : {
+            cpf:
+              valor.replace(/\D/g, ""),
+          };
+
     const usuario =
       await Usuario.findOne({
-        where: {
-          [Op.or]: [
-            {
-              email: valor,
-            },
-            {
-              cpf: valor,
-            },
-          ],
-        },
+        where: condicao,
       });
 
     /*
