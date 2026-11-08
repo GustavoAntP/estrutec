@@ -41,6 +41,53 @@ function cpfValido(cpf) {
   );
 }
 
+function cnpjValido(cnpj) {
+  const numeros = String(cnpj).replace(/\D/g, "");
+
+  if (numeros.length !== 14) {
+    return false;
+  }
+
+  // CNPJs com todos os dígitos iguais são sempre inválidos (ex: 11.111.111/1111-11)
+  if (/^(\d)\1{13}$/.test(numeros)) {
+    return false;
+  }
+
+  const calcularDigitoVerificador = (base, pesos) => {
+    let soma = 0;
+
+    for (let i = 0; i < base.length; i++) {
+      soma += Number(base[i]) * pesos[i];
+    }
+
+    const resto = soma % 11;
+
+    return resto < 2 ? 0 : 11 - resto;
+  };
+
+  const pesosPrimeiroDigito = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const pesosSegundoDigito = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+  const primeirosDozeDigitos = numeros.slice(0, 12);
+  const primeiroDigitoVerificador = calcularDigitoVerificador(
+    primeirosDozeDigitos,
+    pesosPrimeiroDigito
+  );
+
+  const primeirosTrezeDigitos =
+    primeirosDozeDigitos + String(primeiroDigitoVerificador);
+  const segundoDigitoVerificador = calcularDigitoVerificador(
+    primeirosTrezeDigitos,
+    pesosSegundoDigito
+  );
+
+  return (
+    Number(numeros[12]) === primeiroDigitoVerificador &&
+    Number(numeros[13]) === segundoDigitoVerificador
+  );
+}
+
 module.exports = {
   cpfValido,
+  cnpjValido,
 };

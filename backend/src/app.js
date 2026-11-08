@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const bcrypt = require("bcrypt");
 
 // Sem JWT_SECRET o servidor subia normalmente e so quebrava no primeiro login,
 // com um erro do jsonwebtoken que nao diz o que esta faltando.
@@ -93,6 +94,22 @@ app.use((erro, req, res, proximo) => {
 
 const PORTA = process.env.PORT || 3001;
 
+async function garantirSuperAdmin() {
+  const count = await Usuario.count();
+  if (count === 0) {
+    const senhaHash = await bcrypt.hash(process.env.ADMIN_SENHA || "123456", 10);
+    await Usuario.create({
+      nome: "Administrador Inicial",
+      cpf: process.env.ADMIN_CPF || "00000000000",
+      email: process.env.ADMIN_EMAIL || "admin@estrutec.com",
+      senha_hash: senhaHash,
+      perfil: "ADMINISTRADOR",
+      ativo: true,
+    });
+    console.log("Usuário administrador inicial criado com sucesso!");
+  }
+}
+
 async function iniciarServidor() {
   try {
     await sequelize.authenticate();
@@ -100,6 +117,8 @@ async function iniciarServidor() {
 
     await sequelize.sync();
     console.log("Tabelas sincronizadas com sucesso!");
+
+    await garantirSuperAdmin();
 
     app.listen(PORTA, () => {
       console.log(`Servidor Estrutec rodando na porta ${PORTA}`);

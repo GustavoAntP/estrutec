@@ -17,9 +17,9 @@ async function cadastrarUsuario(dados) {
     throw new Error("CPF deve conter 11 números.");
   }
 
- /*if (!cpfValido(cpfLimpo)) {
-   throw new Error("CPF inválido.");
-  }*/
+  if (!cpfValido(cpfLimpo)) {
+    throw new Error("CPF inválido.");
+  }
 
   const perfisPermitidos = [
     "ADMINISTRADOR",
@@ -118,9 +118,9 @@ async function editarUsuario(id, dados) {
     );
   }
 
-  /*if (!cpfValido(cpfLimpo)) {
+  if (!cpfValido(cpfLimpo)) {
     throw new Error("CPF inválido.");
-  }*/
+  }
 
   const emailNormalizado =
     email.trim().toLowerCase();

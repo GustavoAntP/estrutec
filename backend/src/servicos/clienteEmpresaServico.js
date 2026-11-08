@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const ClienteEmpresa = require("../modelos/ClienteEmpresa");
+const { cnpjValido } = require("../utilitarios/validadores");
 
 async function cadastrarClienteEmpresa(dados) {
   const {
@@ -26,6 +27,12 @@ async function cadastrarClienteEmpresa(dados) {
     if (cnpjLimpo.length !== 14) {
       throw new Error(
         "CNPJ deve conter 14 números."
+      );
+    }
+
+    if (!cnpjValido(cnpjLimpo)) {
+      throw new Error(
+        "CNPJ inválido."
       );
     }
 
@@ -121,6 +128,12 @@ async function editarClienteEmpresa(
     if (cnpjLimpo.length !== 14) {
       throw new Error(
         "CNPJ deve conter 14 números."
+      );
+    }
+
+    if (!cnpjValido(cnpjLimpo)) {
+      throw new Error(
+        "CNPJ inválido."
       );
     }
 
