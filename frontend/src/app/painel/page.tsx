@@ -19,23 +19,26 @@ type Projeto = {
   status: string;
 };
 
+type ClienteEmpresa = {
+  id: number;
+  razao_social: string;
+  nome_fantasia: string | null;
+};
+
 export default function PainelPage() {
   const router = useRouter();
-
-  const [projetos, setProjetos] =
-    useState<Projeto[]>([]);
-
-  const [carregando, setCarregando] =
-    useState(true);
-
-  const [erro, setErro] =
-    useState("");
-
-  const [usuarioLogado, setUsuarioLogado] =
-    useState<UsuarioLogado | null>(null);
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [usuarioLogado, setUsuarioLogado] = useState<UsuarioLogado | null>(null);
+  const [busca, setBusca] = useState("");
+  const [clienteEmpresaId, setClienteEmpresaId] = useState("");
+  const [statusFiltro, setStatusFiltro] = useState("");
+  const [clientesEmpresas, setClientesEmpresas] = useState<ClienteEmpresa[]>([]);
 
   useEffect(() => {
     carregarProjetos();
+    carregarClientesEmpresas();
   }, []);
 
   useEffect(() => {
@@ -57,19 +60,73 @@ export default function PainelPage() {
     }
   }, []);
 
+  async function carregarClientesEmpresas() {
+    try {
+      const resposta = await apiAutenticada("/clientes");
+
+      if (resposta.status === 401) {
+        localStorage.removeItem("estrutec_token");
+        localStorage.removeItem("estrutec_usuario");
+        router.push("/");
+        return;
+      }
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(
+          dados.erro || "Não foi possível carregar as empresas clientes."
+        );
+      }
+
+      setClientesEmpresas(dados.clientes || []);
+    } catch (erro) {
+      console.error("Erro ao carregar empresas clientes:", erro);
+    }
+  }
+
   async function carregarProjetos() {
     try {
       setCarregando(true);
       setErro("");
 
+      const parametros = new URLSearchParams();
+
+      if (busca.trim()) {
+        parametros.append("busca", busca.trim());
+      }
+
+      if (clienteEmpresaId) {
+        parametros.append(
+          "clienteEmpresaId",
+          clienteEmpresaId
+        );
+      }
+
+      if (statusFiltro) {
+        parametros.append(
+          "status",
+          statusFiltro
+        );
+      }
+
+      const query =
+        parametros.toString();
+
       const resposta =
         await apiAutenticada(
-          "/projetos"
+          `/projetos${
+            query ? `?${query}` : ""
+          }`
         );
 
       if (resposta.status === 401) {
         localStorage.removeItem(
           "estrutec_token"
+        );
+
+        localStorage.removeItem(
+          "estrutec_usuario"
         );
 
         router.push("/login");
@@ -249,6 +306,8 @@ export default function PainelPage() {
             </p>
           </div>
 
+          
+
           <div style={estilos.contador}>
             <strong>
               {projetos.length}
@@ -259,6 +318,195 @@ export default function PainelPage() {
                 ? "projeto"
                 : "projetos"}
             </span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E7E5E4",
+            borderRadius: "16px",
+            padding: "20px",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              alignItems: "end",
+              flexWrap: "wrap",
+            }}
+          >
+            {/* BUSCA */}
+            <div
+              style={{
+                flex: "2 1 280px",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  marginBottom: "6px",
+                }}
+              >
+                Buscar projeto
+              </label>
+
+              <input
+                type="text"
+                value={busca}
+                onChange={(e) =>
+                  setBusca(e.target.value)
+                }
+                placeholder="Código, nome ou cliente..."
+                style={{
+                  width: "100%",
+                  height: "42px",
+                  padding: "0 12px",
+                  border:
+                    "1px solid #D6D3D1",
+                  borderRadius: "8px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {/* EMPRESA */}
+            <div
+              style={{
+                flex: "1 1 220px",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  marginBottom: "6px",
+                }}
+              >
+                Empresa cliente
+              </label>
+
+              <select
+                value={clienteEmpresaId}
+                onChange={(e) =>
+                  setClienteEmpresaId(
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: "100%",
+                  height: "42px",
+                  padding: "0 12px",
+                  border:
+                    "1px solid #D6D3D1",
+                  borderRadius: "8px",
+                  background: "#FFFFFF",
+                }}
+              >
+                <option value="">
+                  Todas as empresas
+                </option>
+
+                {clientesEmpresas.map(
+                  (empresa) => (
+                    <option
+                      key={empresa.id}
+                      value={empresa.id}
+                    >
+                      {empresa.nome_fantasia ||
+                        empresa.razao_social}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            {/* STATUS */}
+            <div
+              style={{
+                flex: "1 1 200px",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  marginBottom: "6px",
+                }}
+              >
+                Status
+              </label>
+
+              <select
+                value={statusFiltro}
+                onChange={(e) =>
+                  setStatusFiltro(
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: "100%",
+                  height: "42px",
+                  padding: "0 12px",
+                  border:
+                    "1px solid #D6D3D1",
+                  borderRadius: "8px",
+                  background: "#FFFFFF",
+                }}
+              >
+                <option value="">
+                  Todos os status
+                </option>
+
+                <option value="RASCUNHO">
+                  Rascunho
+                </option>
+
+                <option value="IMPORTACAO_PENDENTE">
+                  Importação pendente
+                </option>
+
+                <option value="FABRICACAO_CALCULADA">
+                  Fabricação calculada
+                </option>
+
+                <option value="LOGISTICA_CALCULADA">
+                  Logística calculada
+                </option>
+
+                <option value="MONTAGEM_CALCULADA">
+                  Montagem calculada
+                </option>
+
+                <option value="FINALIZADO">
+                  Finalizado
+                </option>
+              </select>
+            </div>
+
+            {/* FILTRAR */}
+            <button
+              type="button"
+              onClick={carregarProjetos}
+              style={{
+                height: "42px",
+                padding: "0 22px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#171717",
+                color: "#FFFFFF",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Filtrar
+            </button>
           </div>
         </div>
 

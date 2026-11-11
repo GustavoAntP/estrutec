@@ -129,37 +129,69 @@ async function cadastrarProjeto(
   return projeto;
 }
 
-async function listarProjetos(
-  usuarioId
-) {
-  const projetos =
-    await Projeto.findAll({
-      where: {
-        usuario_id: usuarioId,
-      },
+async function listarProjetos(usuarioId, filtros = {}) {
+  const {
+    busca,
+    clienteEmpresaId,
+    status,
+  } = filtros;
 
-      include: [
-        {
-          model: ClienteEmpresa,
-          as: "clienteEmpresa",
+  const where = {
+    usuario_id: usuarioId,
+  };
 
-          attributes: [
-            "id",
-            "razao_social",
-            "nome_fantasia",
-            "cnpj",
-          ],
+  // Filtro por empresa cliente
+  if (clienteEmpresaId) {
+    where.cliente_empresa_id = Number(clienteEmpresaId);
+  }
 
-          required: false,
+  // Filtro por status
+  if (status) {
+    where.status = status;
+  }
+
+  // Busca por código, nome do projeto ou nome do cliente
+  if (busca && busca.trim()) {
+    const termo = `%${busca.trim()}%`;
+
+    where[Op.or] = [
+      {
+        codigo: {
+          [Op.iLike]: termo,
         },
-      ],
+      },
+      {
+        nome: {
+          [Op.iLike]: termo,
+        },
+      },
+      {
+        cliente: {
+          [Op.iLike]: termo,
+        },
+      },
+    ];
+  }
 
-      order: [
-        ["criado_em", "DESC"],
-      ],
-    });
+  return Projeto.findAll({
+    where,
 
-  return projetos;
+    include: [
+      {
+        model: ClienteEmpresa,
+        as: "clienteEmpresa",
+        attributes: [
+          "id",
+          "razao_social",
+          "nome_fantasia",
+          "cnpj",
+        ],
+        required: false,
+      },
+    ],
+
+    order: [["criado_em", "DESC"]],
+  });
 }
 
 async function buscarProjetoPorId(

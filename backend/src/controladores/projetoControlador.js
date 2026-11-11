@@ -20,15 +20,22 @@ async function cadastrar(req, res) {
 
 async function listar(req, res) {
   try {
-    const projetos = await projetoServico.listarProjetos(
-      req.usuario.id
-    );
+    const filtros = {
+      busca: req.query.busca,
+      clienteEmpresaId:
+        req.query.clienteEmpresaId,
+      status: req.query.status,
+    };
 
-    return res.status(200).json({
-      projetos,
-    });
+    const projetos =
+      await projetoServico.listarProjetos(
+        req.usuarioId,
+        filtros
+      );
+
+    return res.json({ projetos });
   } catch (erro) {
-    return res.status(500).json({
+    return res.status(400).json({
       erro: erro.message,
     });
   }
