@@ -4,8 +4,6 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
-// Sem JWT_SECRET o servidor subia normalmente e so quebrava no primeiro login,
-// com um erro do jsonwebtoken que nao diz o que esta faltando.
 if (!process.env.JWT_SECRET) {
   throw new Error(
     "JWT_SECRET nao configurada. Copie backend/.env.example para backend/.env e preencha. " +
@@ -28,18 +26,19 @@ const EquipamentoMontagem = require("./modelos/EquipamentoMontagem");
 const EquipeMontagem = require("./modelos/EquipeMontagem");
 const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
 const ClienteEmpresa = require("./modelos/ClienteEmpresa");
+const Transportadora = require("./modelos/Transportadora");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
 const authRotas = require("./rotas/authRotas");
 const projetoRotas = require("./rotas/projetoRotas");
 const clienteEmpresaRotas = require("./rotas/clienteEmpresaRotas");
+const transportadoraRotas = require("./rotas/transportadoraRotas");
 
 const app = express();
 
 app.use(helmet());
 
-// Apenas a origem do frontend, definida no .env
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:3000",
@@ -65,9 +64,7 @@ app.use("/auth", authRotas);
 app.use("/projetos", projetoRotas);
 app.use("/auth",recuperacaoSenhaRotas);
 app.use("/clientes", clienteEmpresaRotas);
-
-
-
+app.use("/transportadoras",transportadoraRotas);
 
 app.get("/", (req, res) => {
   res.json({
@@ -75,8 +72,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Tratamento centralizado de erros. Sem isto, o que escapa dos controladores
-// (ex.: multer no upload de planilha) volta como HTML de stack trace.
 app.use((erro, req, res, proximo) => {
   if (erro.name === "MulterError" || erro.status === 400) {
     return res.status(400).json({

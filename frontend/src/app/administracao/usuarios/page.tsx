@@ -431,10 +431,10 @@ export default function UsuariosPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/painel")}
+            onClick={() => router.push("/administracao")}
             style={estilos.botaoVoltar}
           >
-            Voltar ao painel
+            Voltar a Administração
           </button>
         </div>
       </header>

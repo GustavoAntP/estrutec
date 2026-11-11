@@ -530,7 +530,7 @@ export default function ClientesPage() {
             type="button"
             onClick={() =>
               router.push(
-                "/administracao/usuarios"
+                "/administracao"
               )
             }
             style={estilos.botaoVoltar}

@@ -265,7 +265,7 @@ export default function PainelPage() {
               type="button"
               onClick={() =>
                 router.push(
-                  "/administracao/usuarios"
+                  "/administracao"
                 )
               }
               style={estilos.botaoAdministracao}
