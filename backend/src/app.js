@@ -27,6 +27,9 @@ const EquipeMontagem = require("./modelos/EquipeMontagem");
 const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
 const ClienteEmpresa = require("./modelos/ClienteEmpresa");
 const Transportadora = require("./modelos/Transportadora");
+const Equipamento = require("./modelos/Equipamento");
+const Equipe = require("./modelos/Equipe");
+const ConfiguracaoFabricacaoPadrao = require("./modelos/ConfiguracaoFabricacaoPadrao");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
@@ -34,6 +37,9 @@ const authRotas = require("./rotas/authRotas");
 const projetoRotas = require("./rotas/projetoRotas");
 const clienteEmpresaRotas = require("./rotas/clienteEmpresaRotas");
 const transportadoraRotas = require("./rotas/transportadoraRotas");
+const equipamentoRotas = require("./rotas/equipamentoRotas");
+const equipeRotas = require("./rotas/equipeRotas");
+const configuracaoFabricacaoPadraoRotas = require("./rotas/configuracaoFabricacaoPadraoRotas");
 
 const app = express();
 
@@ -64,7 +70,10 @@ app.use("/auth", authRotas);
 app.use("/projetos", projetoRotas);
 app.use("/auth",recuperacaoSenhaRotas);
 app.use("/clientes", clienteEmpresaRotas);
-app.use("/transportadoras",transportadoraRotas);
+app.use("/transportadoras", transportadoraRotas);
+app.use("/equipamentos", equipamentoRotas);
+app.use("/equipes", equipeRotas);
+app.use("/configuracoes/fabricacao-padrao", configuracaoFabricacaoPadraoRotas);
 
 app.get("/", (req, res) => {
   res.json({

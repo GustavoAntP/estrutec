@@ -1,7 +1,6 @@
 const Projeto = require("../modelos/Projeto");
-const ConfiguracaoFabricacao = require(
-  "../modelos/ConfiguracaoFabricacao"
-);
+const ConfiguracaoFabricacao = require("../modelos/ConfiguracaoFabricacao");
+const ConfiguracaoFabricacaoPadrao = require("../modelos/ConfiguracaoFabricacaoPadrao");
 
 async function verificarProjeto(projetoId, usuarioId) {
   const projeto = await Projeto.findOne({
@@ -124,22 +123,101 @@ async function salvarConfiguracao(
   return configuracao;
 }
 
-async function buscarConfiguracao(projetoId, usuarioId) {
-  await verificarProjeto(projetoId, usuarioId);
+async function buscarConfiguracao(
+  projetoId,
+  usuarioId
+) {
+  await verificarProjeto(
+    projetoId,
+    usuarioId
+  );
 
-  const configuracao = await ConfiguracaoFabricacao.findOne({
-    where: {
-      projeto_id: projetoId,
-    },
-  });
+  const configuracaoProjeto =
+    await ConfiguracaoFabricacao.findOne({
+      where: {
+        projeto_id: projetoId,
+      },
+    });
 
-  if (!configuracao) {
+  const configuracaoPadrao =
+    await ConfiguracaoFabricacaoPadrao.findOne({
+      order: [["id", "ASC"]],
+    });
+
+  const precosPadrao =
+    configuracaoPadrao
+      ? {
+          cimento:
+            configuracaoPadrao.preco_cimento_rs_kg,
+
+          areia:
+            configuracaoPadrao.preco_areia_rs_m3,
+
+          brita:
+            configuracaoPadrao.preco_brita_rs_m3,
+
+          agua:
+            configuracaoPadrao.preco_agua_rs_l,
+
+          aco:
+            configuracaoPadrao.preco_aco_rs_kg,
+
+          neoprene:
+            configuracaoPadrao.preco_neoprene_rs_m2,
+        }
+      : null;
+
+  if (configuracaoProjeto) {
+    return {
+      ...configuracaoProjeto.toJSON(),
+
+      origem: "PROJETO",
+
+      precos_padrao:
+        precosPadrao,
+    };
+  }
+
+  if (!configuracaoPadrao) {
     throw new Error(
-      "Configuração de fabricação ainda não cadastrada."
+      "Nenhuma configuração padrão de fabricação foi cadastrada."
     );
   }
 
-  return configuracao;
+  return {
+    id: null,
+
+    projeto_id:
+      Number(projetoId),
+
+    fck_mpa:
+      configuracaoPadrao.fck_mpa,
+
+    taxa_armadura_kg_m3:
+      configuracaoPadrao.taxa_armadura_kg_m3,
+
+    desperdicio_percentual: 0,
+
+    consumo_cimento_kg_m3:
+      configuracaoPadrao.consumo_cimento_kg_m3,
+
+    consumo_areia_m3_m3:
+      configuracaoPadrao.consumo_areia_m3_m3,
+
+    consumo_brita_m3_m3:
+      configuracaoPadrao.consumo_brita_m3_m3,
+
+    consumo_agua_l_m3:
+      configuracaoPadrao.consumo_agua_l_m3,
+
+    neoprene_m2_por_viga:
+      configuracaoPadrao.neoprene_m2_por_viga,
+
+    origem: "PADRAO",
+
+    precos_padrao:
+      precosPadrao,
+  };
 }
 
 module.exports = {

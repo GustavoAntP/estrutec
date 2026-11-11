@@ -51,6 +51,17 @@ type ConfiguracaoFabricacao = {
   consumo_brita_m3_m3?: number | string;
   consumo_agua_l_m3?: number | string;
   neoprene_m2_por_viga?: number | string;
+
+  origem?: "PROJETO" | "PADRAO";
+
+  precos_padrao?: {
+    cimento?: number | string;
+    areia?: number | string;
+    brita?: number | string;
+    agua?: number | string;
+    aco?: number | string;
+    neoprene?: number | string;
+  } | null;
 };
 
 export default function FabricacaoPage() {
@@ -89,10 +100,14 @@ export default function FabricacaoPage() {
   const [sucesso, setSucesso] = useState("");
 
   useEffect(() => {
-    carregarConfiguracao();
-    carregarPrecos();
+    carregarDadosFabricacao();
     carregarElementos();
   }, [id]);
+
+  async function carregarDadosFabricacao() {
+    await carregarConfiguracao();
+    await carregarPrecos();
+  }
 
   async function carregarPrecos() {
     try {
@@ -321,7 +336,7 @@ export default function FabricacaoPage() {
     }
     }
 
-  async function carregarConfiguracao() {
+    async function carregarConfiguracao() {
     try {
       setCarregando(true);
       setErro("");
@@ -340,11 +355,8 @@ export default function FabricacaoPage() {
         return;
       }
 
-      if (resposta.status === 404) {
-        return;
-      }
-
-      const dados = await resposta.json();
+      const dados =
+        await resposta.json();
 
       if (!resposta.ok) {
         setErro(
@@ -359,7 +371,9 @@ export default function FabricacaoPage() {
         dados.configuracao || dados;
 
       setFck(
-        String(config.fck_mpa ?? "")
+        String(
+          config.fck_mpa ?? ""
+        )
       );
 
       setTaxaArmadura(
@@ -372,7 +386,7 @@ export default function FabricacaoPage() {
       setDesperdicio(
         String(
           config.desperdicio_percentual ??
-            ""
+            0
         )
       );
 
@@ -410,6 +424,58 @@ export default function FabricacaoPage() {
             ""
         )
       );
+
+      /*
+        Se vierem preços padrão,
+        eles entram inicialmente na tela.
+
+        Depois carregarPrecos() roda.
+        Se o projeto possuir preços próprios,
+        eles substituem estes valores.
+      */
+      if (config.precos_padrao) {
+        setPrecoCimento(
+          String(
+            config.precos_padrao.cimento ??
+              ""
+          )
+        );
+
+        setPrecoAreia(
+          String(
+            config.precos_padrao.areia ??
+              ""
+          )
+        );
+
+        setPrecoBrita(
+          String(
+            config.precos_padrao.brita ??
+              ""
+          )
+        );
+
+        setPrecoAgua(
+          String(
+            config.precos_padrao.agua ??
+              ""
+          )
+        );
+
+        setPrecoAco(
+          String(
+            config.precos_padrao.aco ??
+              ""
+          )
+        );
+
+        setPrecoNeoprene(
+          String(
+            config.precos_padrao.neoprene ??
+              ""
+          )
+        );
+      }
     } catch {
       setErro(
         "Não foi possível conectar ao servidor."

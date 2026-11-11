@@ -19,6 +19,13 @@ type TipoFrete =
   | "TERCEIRIZADO"
   | "";
 
+type Transportadora = {
+  id: number;
+  razao_social: string;
+  nome_fantasia: string | null;
+  ativo: boolean;
+};
+
 type SugestaoViagens = {
   totalPecas: number;
   pesoTotalKg?: number | null;
@@ -82,6 +89,8 @@ export default function LogisticaPage() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [empresa, setEmpresa] = useState("");
+  const [transportadoras, setTransportadoras,] = useState<Transportadora[]>([]);
+  const [carregandoTransportadoras, setCarregandoTransportadoras,] = useState(false);
   const [numeroCotacao, setNumeroCotacao] = useState("");
   const [validadeCotacao, setValidadeCotacao] = useState("");
   const [valorTotal, setValorTotal] = useState("");
@@ -130,6 +139,7 @@ export default function LogisticaPage() {
     carregarFreteTerceirizado();
     carregarFreteProprio();
     carregarElementosSemPeso();
+    carregarTransportadoras();
   }, [id]);
 
   async function carregarLogistica() {
@@ -251,6 +261,48 @@ export default function LogisticaPage() {
         Carregando logística...
       </main>
     );
+  }
+
+  async function carregarTransportadoras() {
+    try {
+        setCarregandoTransportadoras(true);
+
+        const resposta =
+        await apiAutenticada(
+            "/transportadoras"
+        );
+
+        if (resposta.status === 401) {
+        localStorage.removeItem(
+            "estrutec_token"
+        );
+
+        router.push("/login");
+        return;
+        }
+
+        const dados =
+        await resposta.json();
+
+        if (!resposta.ok) {
+        return;
+        }
+
+        const lista: Transportadora[] =
+        dados.transportadoras || [];
+
+        setTransportadoras(
+        lista.filter(
+            (transportadora) =>
+            transportadora.ativo
+        )
+        );
+    } catch {
+        // Mantém a tela funcionando
+        // mesmo se a lista não carregar.
+    } finally {
+        setCarregandoTransportadoras(false);
+    }
   }
 
   async function carregarFreteTerceirizado() {
@@ -1176,16 +1228,54 @@ export default function LogisticaPage() {
                 Transportadora *
                 </label>
 
-                <input
-                value={empresa}
-                onChange={(evento) =>
-                    setEmpresa(
-                    evento.target.value
-                    )
-                }
-                placeholder="Ex.: Transportadora ABC"
-                style={estilos.input}
-                />
+                <select
+                    value={empresa}
+                    onChange={(evento) =>
+                        setEmpresa(
+                        evento.target.value
+                        )
+                    }
+                    disabled={
+                        carregandoTransportadoras
+                    }
+                    style={estilos.input}
+                    >
+                    <option value="">
+                        {carregandoTransportadoras
+                        ? "Carregando transportadoras..."
+                        : "Selecione uma transportadora"}
+                    </option>
+
+                    {empresa &&
+                        !transportadoras.some(
+                        (transportadora) =>
+                            (
+                            transportadora.nome_fantasia ||
+                            transportadora.razao_social
+                            ) === empresa
+                        ) && (
+                        <option value={empresa}>
+                            {empresa}
+                        </option>
+                        )}
+
+                    {transportadoras.map(
+                        (transportadora) => {
+                        const nome =
+                            transportadora.nome_fantasia ||
+                            transportadora.razao_social;
+
+                        return (
+                            <option
+                            key={transportadora.id}
+                            value={nome}
+                            >
+                            {nome}
+                            </option>
+                        );
+                        }
+                    )}
+                </select>
             </div>
 
             <div style={estilos.campo}>

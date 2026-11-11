@@ -35,6 +35,26 @@ type EquipeMontagem = {
   observacoes?: string | null;
 };
 
+type EquipamentoCadastrado = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  tipo_cobranca: "HORA" | "DIA";
+  valor_padrao: string | number;
+  mobilizacao_padrao: string | number;
+  desmobilizacao_padrao: string | number;
+  ativo: boolean;
+};
+
+type EquipeCadastrada = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  quantidade_padrao: number;
+  custo_diario_padrao: string | number;
+  ativo: boolean;
+};
+
 type CustosMontagem = {
   equipamentos: {
     quantidade: number;
@@ -79,127 +99,54 @@ type CustosMontagem = {
 
 export default function MontagemPage() {
   const router = useRouter();
-
-  const params =
-    useParams<{ id: string }>();
-
+  const params = useParams<{ id: string }>();
   const id = params.id;
+  const [custoHospedagem, setCustoHospedagem] = useState("");
+  const [custoAlimentacao, setCustoAlimentacao] = useState("");
+  const [custoTransporteEquipe, setCustoTransporteEquipe,] = useState("");
+  const [outrosCustos, setOutrosCustos] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
+  const [equipamentos, setEquipamentos] = useState<EquipamentoMontagem[]>([]);
+  const [nomeEquipamento, setNomeEquipamento] = useState("");
+  const [quantidadeEquipamento, setQuantidadeEquipamento] = useState("1");
+  const [tipoCobranca, setTipoCobranca] = useState<"HORA" | "DIA">("DIA");
+  const [tempoUso, setTempoUso] = useState("");
+  const [valorUnitario, setValorUnitario] = useState("");
+  const [custoMobilizacao, setCustoMobilizacao] = useState("");
+  const [custoDesmobilizacao, setCustoDesmobilizacao] = useState("");
+  const [observacoesEquipamento, setObservacoesEquipamento] = useState("");
+  const [salvandoEquipamento, setSalvandoEquipamento] = useState(false);
+  const [sucessoEquipamento, setSucessoEquipamento] = useState("");
+  const [equipes, setEquipes] = useState<EquipeMontagem[]>([]);
+  const [funcaoEquipe, setFuncaoEquipe] = useState("");
+  const [quantidadeTrabalhadores, setQuantidadeTrabalhadores,] = useState("1");
+  const [quantidadeDias, setQuantidadeDias] = useState("");
+  const [custoDiarioTrabalhador, setCustoDiarioTrabalhador,] = useState("");
+  const [observacoesEquipe, setObservacoesEquipe,] = useState("");
+  const [salvandoEquipe, setSalvandoEquipe] = useState(false);
+  const [sucessoEquipe, setSucessoEquipe] = useState("");
+  const [custosMontagem, setCustosMontagem] = useState<CustosMontagem | null>(null);
+  const [calculandoMontagem, setCalculandoMontagem] = useState(false);
+  const [confirmandoMontagem, setConfirmandoMontagem] = useState(false);
+  const [montagemConfirmada, setMontagemConfirmada] = useState(false);
+  const [sucessoConfirmacao, setSucessoConfirmacao] = useState("");
+  const [erroCalculo, setErroCalculo] = useState("");
+  const [equipamentosDisponiveis, setEquipamentosDisponiveis,] = useState<EquipamentoCadastrado[]>([]);
+  const [equipesDisponiveis, setEquipesDisponiveis,] = useState<EquipeCadastrada[]>([]);
+  const [equipamentoSelecionadoId, setEquipamentoSelecionadoId,] = useState("");
+  const [equipeSelecionadaId, setEquipeSelecionadaId,] = useState("");
+  const [carregandoCadastros, setCarregandoCadastros,] = useState(false);
 
-  const [custoHospedagem, setCustoHospedagem] =
-    useState("");
-
-  const [custoAlimentacao, setCustoAlimentacao] =
-    useState("");
-
-  const [
-    custoTransporteEquipe,
-    setCustoTransporteEquipe,
-  ] = useState("");
-
-  const [outrosCustos, setOutrosCustos] =
-    useState("");
-
-  const [observacoes, setObservacoes] =
-    useState("");
-
-  const [carregando, setCarregando] =
-    useState(true);
-
-  const [salvando, setSalvando] =
-    useState(false);
-
-  const [erro, setErro] =
-    useState("");
-
-  const [sucesso, setSucesso] =
-    useState("");
-
-  const [equipamentos, setEquipamentos] =
-    useState<EquipamentoMontagem[]>([]);
-
-  const [nomeEquipamento, setNomeEquipamento] =
-    useState("");
-
-  const [quantidadeEquipamento, setQuantidadeEquipamento] =
-    useState("1");
-
-  const [tipoCobranca, setTipoCobranca] =
-    useState<"HORA" | "DIA">("DIA");
-
-  const [tempoUso, setTempoUso] =
-    useState("");
-
-  const [valorUnitario, setValorUnitario] =
-    useState("");
-
-  const [custoMobilizacao, setCustoMobilizacao] =
-    useState("");
-
-  const [custoDesmobilizacao, setCustoDesmobilizacao] =
-    useState("");
-
-  const [observacoesEquipamento, setObservacoesEquipamento] =
-    useState("");
-
-  const [salvandoEquipamento, setSalvandoEquipamento] =
-    useState(false);
-
-  const [sucessoEquipamento, setSucessoEquipamento] =
-    useState("");
-
-  const [equipes, setEquipes] =
-    useState<EquipeMontagem[]>([]);
-
-  const [funcaoEquipe, setFuncaoEquipe] =
-    useState("");
-
-  const [
-    quantidadeTrabalhadores,
-    setQuantidadeTrabalhadores,
-    ] = useState("1");
-
-  const [quantidadeDias, setQuantidadeDias] =
-    useState("");
-
-  const [
-    custoDiarioTrabalhador,
-    setCustoDiarioTrabalhador,
-    ] = useState("");
-
-  const [
-    observacoesEquipe,
-    setObservacoesEquipe,
-    ] = useState("");
-
-  const [salvandoEquipe, setSalvandoEquipe] =
-    useState(false);
-
-  const [sucessoEquipe, setSucessoEquipe] =
-    useState("");
-
-  const [custosMontagem, setCustosMontagem] =
-    useState<CustosMontagem | null>(null);
-
-  const [calculandoMontagem, setCalculandoMontagem] =
-    useState(false);
-
-  const [confirmandoMontagem, setConfirmandoMontagem] =
-    useState(false);
-
-  const [montagemConfirmada, setMontagemConfirmada] =
-    useState(false);
-
-  const [sucessoConfirmacao, setSucessoConfirmacao] =
-    useState("");
-
-  const [erroCalculo, setErroCalculo] =
-    useState("");
-
-    useEffect(() => {
-        carregarMontagem();
-        carregarEquipamentos();
-        carregarEquipes();
-    }, [id]);
+  useEffect(() => {
+    carregarMontagem();
+    carregarEquipamentos();
+    carregarEquipes();
+    carregarCadastrosMontagem();
+  }, [id]);
 
   async function carregarMontagem() {
     try {
@@ -525,6 +472,7 @@ export default function MontagemPage() {
         setEquipes(
         dados.equipes || dados || []
         );
+        setEquipamentoSelecionadoId("");
     } catch {
         // A página continua funcionando.
     }
@@ -603,6 +551,7 @@ export default function MontagemPage() {
         setQuantidadeDias("");
         setCustoDiarioTrabalhador("");
         setObservacoesEquipe("");
+        setEquipeSelecionadaId("");
 
         await carregarEquipes();
     } catch {
@@ -731,6 +680,187 @@ export default function MontagemPage() {
     } finally {
         setConfirmandoMontagem(false);
     }
+    }
+
+    async function carregarCadastrosMontagem() {
+      try {
+        setCarregandoCadastros(true);
+
+        const [
+          respostaEquipamentos,
+          respostaEquipes,
+        ] = await Promise.all([
+          apiAutenticada("/equipamentos"),
+          apiAutenticada("/equipes"),
+        ]);
+
+        if (
+          respostaEquipamentos.status === 401 ||
+          respostaEquipes.status === 401
+        ) {
+          localStorage.removeItem(
+            "estrutec_token"
+          );
+
+          router.push("/login");
+          return;
+        }
+
+        const dadosEquipamentos =
+          await respostaEquipamentos.json();
+
+        const dadosEquipes =
+          await respostaEquipes.json();
+
+        if (respostaEquipamentos.ok) {
+          const lista =
+            dadosEquipamentos.equipamentos ||
+            [];
+
+          setEquipamentosDisponiveis(
+            lista.filter(
+              (
+                equipamento:
+                  EquipamentoCadastrado
+              ) => equipamento.ativo
+            )
+          );
+        }
+
+        if (respostaEquipes.ok) {
+          const lista =
+            dadosEquipes.equipes || [];
+
+          setEquipesDisponiveis(
+            lista.filter(
+              (equipe: EquipeCadastrada) =>
+                equipe.ativo
+            )
+          );
+        }
+      } catch {
+        // Mantém a montagem funcionando.
+      } finally {
+        setCarregandoCadastros(false);
+      }
+    }
+
+    function selecionarEquipamento(
+      equipamentoId: string
+    ) {
+      setEquipamentoSelecionadoId(
+        equipamentoId
+      );
+
+      if (!equipamentoId) {
+        setNomeEquipamento("");
+        setTipoCobranca("DIA");
+        setValorUnitario("");
+        setCustoMobilizacao("");
+        setCustoDesmobilizacao("");
+        return;
+      }
+
+      const equipamento =
+        equipamentosDisponiveis.find(
+          (item) =>
+            item.id ===
+            Number(equipamentoId)
+        );
+
+      if (!equipamento) {
+        return;
+      }
+
+      setNomeEquipamento(
+        equipamento.nome
+      );
+
+      setTipoCobranca(
+        equipamento.tipo_cobranca
+      );
+
+      setValorUnitario(
+        String(
+          equipamento.valor_padrao ?? ""
+        )
+      );
+
+      setCustoMobilizacao(
+        String(
+          equipamento.mobilizacao_padrao ??
+            ""
+        )
+      );
+
+      setCustoDesmobilizacao(
+        String(
+          equipamento.desmobilizacao_padrao ??
+            ""
+        )
+      );
+
+      setQuantidadeEquipamento("1");
+      setTempoUso("");
+    }
+
+    function selecionarEquipe(
+      equipeId: string
+    ) {
+      setEquipeSelecionadaId(
+        equipeId
+      );
+
+      if (!equipeId) {
+        setFuncaoEquipe("");
+        setQuantidadeTrabalhadores("1");
+        setCustoDiarioTrabalhador("");
+        return;
+      }
+
+      const equipe =
+        equipesDisponiveis.find(
+          (item) =>
+            item.id === Number(equipeId)
+        );
+
+      if (!equipe) {
+        return;
+      }
+
+      const quantidade =
+        Number(
+          equipe.quantidade_padrao || 1
+        );
+
+      const custoDiarioEquipe =
+        Number(
+          equipe.custo_diario_padrao || 0
+        );
+
+      /*
+        O cadastro administrativo guarda
+        o custo diário da equipe inteira.
+
+        A Montagem atual calcula o custo
+        por trabalhador, então convertemos:
+      */
+      const custoPorTrabalhador =
+        quantidade > 0
+          ? custoDiarioEquipe / quantidade
+          : 0;
+
+      setFuncaoEquipe(equipe.nome);
+
+      setQuantidadeTrabalhadores(
+        String(quantidade)
+      );
+
+      setCustoDiarioTrabalhador(
+        String(custoPorTrabalhador)
+      );
+
+      setQuantidadeDias("");
     }
 
   return (
@@ -910,16 +1040,35 @@ export default function MontagemPage() {
                 <div style={estilos.campo}>
                 <label>Equipamento *</label>
 
-                <input
-                    value={nomeEquipamento}
-                    onChange={(evento) =>
-                    setNomeEquipamento(
-                        evento.target.value
-                    )
-                    }
-                    placeholder="Ex.: Guindaste"
-                    style={estilos.input}
-                />
+            <select
+              value={
+                equipamentoSelecionadoId
+              }
+              onChange={(evento) =>
+                selecionarEquipamento(
+                  evento.target.value
+                )
+              }
+              disabled={carregandoCadastros}
+              style={estilos.input}
+            >
+              <option value="">
+                {carregandoCadastros
+                  ? "Carregando equipamentos..."
+                  : "Selecione um equipamento"}
+              </option>
+
+              {equipamentosDisponiveis.map(
+                (equipamento) => (
+                  <option
+                    key={equipamento.id}
+                    value={equipamento.id}
+                  >
+                    {equipamento.nome}
+                  </option>
+                )
+              )}
+            </select>
                 </div>
 
                 <div style={estilos.campo}>
@@ -1164,79 +1313,101 @@ export default function MontagemPage() {
                     na montagem e seus respectivos custos.
                 </p>
 
-                <div style={estilos.gridFormulario}>
-                    <div style={estilos.campo}>
-                    <label>
-                        Função *
-                    </label>
+              <div style={estilos.gridFormulario}>
 
-                    <input
-                        value={funcaoEquipe}
-                        onChange={(evento) =>
-                        setFuncaoEquipe(
-                            evento.target.value
-                        )
-                        }
-                        placeholder="Ex.: Montador"
-                        style={estilos.input}
-                    />
-                    </div>
+                <div
+                  style={{
+                    ...estilos.campo,
+                    gridColumn: "1 / -1",
+                  }}
+                >
+                  <label>
+                    Equipe *
+                  </label>
 
-                    <div style={estilos.campo}>
-                    <label>
-                        Quantidade de trabalhadores *
-                    </label>
+                  <select
+                    value={equipeSelecionadaId}
+                    onChange={(evento) =>
+                      selecionarEquipe(
+                        evento.target.value
+                      )
+                    }
+                    disabled={carregandoCadastros}
+                    style={estilos.input}
+                  >
+                    <option value="">
+                      {carregandoCadastros
+                        ? "Carregando equipes..."
+                        : "Selecione uma equipe"}
+                    </option>
 
-                    <input
-                        type="number"
-                        min="1"
-                        value={quantidadeTrabalhadores}
-                        onChange={(evento) =>
-                        setQuantidadeTrabalhadores(
-                            evento.target.value
-                        )
-                        }
-                        style={estilos.input}
-                    />
-                    </div>
-
-                    <div style={estilos.campo}>
-                    <label>
-                        Quantidade de dias *
-                    </label>
-
-                    <input
-                        type="number"
-                        min="1"
-                        value={quantidadeDias}
-                        onChange={(evento) =>
-                        setQuantidadeDias(
-                            evento.target.value
-                        )
-                        }
-                        style={estilos.input}
-                    />
-                    </div>
-
-                    <div style={estilos.campo}>
-                    <label>
-                        Custo diário por trabalhador (R$) *
-                    </label>
-
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={custoDiarioTrabalhador}
-                        onChange={(evento) =>
-                        setCustoDiarioTrabalhador(
-                            evento.target.value
-                        )
-                        }
-                        style={estilos.input}
-                    />
-                    </div>
+                    {equipesDisponiveis.map(
+                      (equipe) => (
+                        <option
+                          key={equipe.id}
+                          value={equipe.id}
+                        >
+                          {equipe.nome}
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
+                <div style={estilos.campo}>
+                  <label>
+                    Quantidade de trabalhadores *
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantidadeTrabalhadores}
+                    onChange={(evento) =>
+                      setQuantidadeTrabalhadores(
+                        evento.target.value
+                      )
+                    }
+                    style={estilos.input}
+                  />
+                </div>
+
+                <div style={estilos.campo}>
+                  <label>
+                    Quantidade de dias *
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantidadeDias}
+                    onChange={(evento) =>
+                      setQuantidadeDias(
+                        evento.target.value
+                      )
+                    }
+                    style={estilos.input}
+                  />
+                </div>
+
+                <div style={estilos.campo}>
+                  <label>
+                    Custo diário por trabalhador (R$) *
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={custoDiarioTrabalhador}
+                    onChange={(evento) =>
+                      setCustoDiarioTrabalhador(
+                        evento.target.value
+                      )
+                    }
+                    style={estilos.input}
+                  />
+                </div>
+              </div>
 
                 <div style={estilos.campoObservacao}>
                     <label>

@@ -132,6 +132,36 @@ export default function AdministracaoPage() {
               )
             }
           />
+
+          <Card
+            titulo="Equipamentos"
+            descricao="Gerencie os equipamentos utilizados na montagem dos projetos."
+            onClick={() =>
+              router.push(
+                "/administracao/equipamentos"
+              )
+            }
+          />
+
+          <Card
+            titulo="Equipes"
+            descricao="Gerencie as equipes utilizadas na etapa de montagem dos projetos."
+            onClick={() =>
+              router.push(
+                "/administracao/equipes"
+              )
+            }
+          />
+
+          <Card
+            titulo="Parâmetros de Fabricação"
+            descricao="Defina os parâmetros técnicos e preços padrão utilizados nos cálculos de fabricação."
+            onClick={() =>
+              router.push(
+                "/administracao/fabricacao"
+              )
+            }
+          />
         </div>
       </section>
     </main>
