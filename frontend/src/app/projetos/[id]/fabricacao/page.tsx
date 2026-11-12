@@ -88,9 +88,6 @@ export default function FabricacaoPage() {
   const [calculando, setCalculando] = useState(false);
   const [erroCalculo, setErroCalculo] = useState("");  
   const [elementos, setElementos] = useState<ElementoProjeto[]>([]);
-  const [areas, setAreas] = useState<Record<number, string>>({});
-  const [salvandoArea, setSalvandoArea] = useState<number | null>(null);
-  const [sucessoArea, setSucessoArea] = useState("");
   const [confirmandoFabricacao, setConfirmandoFabricacao] = useState(false);
   const [fabricacaoConfirmada, setFabricacaoConfirmada] = useState(false);
   const [sucessoConfirmacao, setSucessoConfirmacao] = useState("");
@@ -303,38 +300,28 @@ export default function FabricacaoPage() {
     }
     }
 
-  async function carregarElementos() {
-    try {
-        const resposta = await apiAutenticada(
+async function carregarElementos() {
+  try {
+    const resposta =
+      await apiAutenticada(
         `/projetos/${id}/elementos`
-        );
+      );
 
-        if (!resposta.ok) {
-        return;
-        }
-
-        const dados = await resposta.json();
-
-        const lista: ElementoProjeto[] =
-        dados.elementos || [];
-
-        setElementos(lista);
-
-        const areasIniciais:
-        Record<number, string> = {};
-
-        lista.forEach((elemento) => {
-        if (elemento.area_secao) {
-            areasIniciais[elemento.id] =
-            String(elemento.area_secao);
-        }
-        });
-
-        setAreas(areasIniciais);
-    } catch {
-        // O restante da página continua funcionando.
+    if (!resposta.ok) {
+      return;
     }
-    }
+
+    const dados =
+      await resposta.json();
+
+    const lista: ElementoProjeto[] =
+      dados.elementos || [];
+
+    setElementos(lista);
+  } catch {
+    // O restante da página continua funcionando.
+  }
+}
 
     async function carregarConfiguracao() {
     try {
@@ -560,66 +547,6 @@ export default function FabricacaoPage() {
       setSalvando(false);
     }
   }
-
-  async function salvarArea(
-    elementoId: number
-    ) {
-    const valor = Number(
-        areas[elementoId]
-    );
-
-    if (
-        !Number.isFinite(valor) ||
-        valor <= 0
-    ) {
-        setErro(
-        "Informe uma área de seção válida."
-        );
-
-        return;
-    }
-
-    setErro("");
-    setSucessoArea("");
-    setSalvandoArea(elementoId);
-
-    try {
-        const resposta =
-        await apiAutenticada(
-            `/projetos/${id}/elementos/${elementoId}`,
-            {
-            method: "PUT",
-
-            body: JSON.stringify({
-                areaSecao: valor,
-            }),
-            }
-        );
-
-        const dados = await resposta.json();
-
-        if (!resposta.ok) {
-        setErro(
-            dados.erro ||
-            "Não foi possível salvar a área da seção."
-        );
-
-        return;
-        }
-
-        setSucessoArea(
-        "Área da seção salva com sucesso!"
-        );
-
-        await carregarElementos();
-    } catch {
-        setErro(
-        "Não foi possível conectar ao servidor."
-        );
-    } finally {
-        setSalvandoArea(null);
-    }
-    }
  
   async function confirmarFabricacao() {
     if (!custos) {
@@ -677,16 +604,6 @@ export default function FabricacaoPage() {
     }
     }
 
-  const elementosSemArea =
-  elementos.filter((elemento) => {
-    const secao =
-      elemento.secao?.toUpperCase();
-
-    return (
-      secao !== "RETANGULAR" &&
-      !elemento.area_secao
-    );
-  });
 
   if (carregando) {
     return (
@@ -904,90 +821,7 @@ export default function FabricacaoPage() {
             </div>
         </form>
         </div>
-        {elementosSemArea.length > 0 && (
-        <div style={estilos.cardSecundario}>
-            <div style={estilos.tituloArea}>
-            <h2 style={estilos.titulo}>
-                Áreas de Seções Especiais
-            </h2>
-
-            <p style={estilos.descricao}>
-                Alguns elementos não possuem seção
-                retangular. Informe a área real da
-                seção para continuar o cálculo.
-            </p>
-            </div>
-
-            <div style={estilos.listaAreas}>
-            {elementosSemArea.map(
-                (elemento) => (
-                <div
-                    key={elemento.id}
-                    style={estilos.linhaArea}
-                >
-                    <div>
-                    <strong>
-                        {elemento.nome_aplicacao}
-                    </strong>
-
-                    <div style={estilos.detalheArea}>
-                        Seção: {elemento.secao}
-                        {" | "}
-                        Comprimento:{" "}
-                        {elemento.comprimento} m
-                        {" | "}
-                        Quantidade:{" "}
-                        {elemento.quantidade}
-                    </div>
-                    </div>
-
-                    <div style={estilos.campoArea}>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.0001"
-                        placeholder="Área em m²"
-                        value={
-                        areas[elemento.id] || ""
-                        }
-                        onChange={(evento) =>
-                        setAreas({
-                            ...areas,
-                            [elemento.id]:
-                            evento.target.value,
-                        })
-                        }
-                        style={estilos.inputArea}
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                        salvarArea(elemento.id)
-                        }
-                        disabled={
-                        salvandoArea ===
-                        elemento.id
-                        }
-                        style={estilos.botaoSalvarArea}
-                    >
-                        {salvandoArea === elemento.id
-                        ? "Salvando..."
-                        : "Salvar"}
-                    </button>
-                    </div>
-                </div>
-                )
-            )}
-            </div>
-
-            {sucessoArea && (
-            <div style={estilos.sucesso}>
-                {sucessoArea}
-            </div>
-            )}
-        </div>
-        )}
+        
         <div style={estilos.cardSecundario}>
             <div style={estilos.cabecalhoCalculo}>
                 <div>

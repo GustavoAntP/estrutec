@@ -23,6 +23,9 @@ async function confirmarImportacao(projetoId, usuarioId, elementos) {
     const altura = Number(elemento.altura);
     const comprimento = Number(elemento.comprimento);
     const quantidade = Number(elemento.quantidade);
+    const volumeUnitario = largura * altura * comprimento;
+    const areaSecao = volumeUnitario * quantidade;
+    const pesoUnitarioKg = volumeUnitario * 2500;
 
     if (
       !elemento.nomeAplicacao ||
@@ -43,17 +46,35 @@ async function confirmarImportacao(projetoId, usuarioId, elementos) {
 
     return {
       projeto_id: projeto.id,
-      linha_origem: elemento.linhaOrigem ?? null,
-      nome_aplicacao: String(elemento.nomeAplicacao).trim(),
-      tipo: String(elemento.tipo).trim(),
+
+      linha_origem:
+        elemento.linhaOrigem ?? null,
+
+      nome_aplicacao:
+        String(elemento.nomeAplicacao).trim(),
+
+      tipo:
+        String(elemento.tipo).trim(),
+
       secao: elemento.secao
         ? String(elemento.secao).trim()
         : null,
+
       aplicacao: elemento.aplicacao
         ? String(elemento.aplicacao).trim()
         : null,
+
       largura,
       altura,
+
+      area_secao: Number(
+        areaSecao.toFixed(4)
+      ),
+
+      peso_unitario_kg: Number(
+        pesoUnitarioKg.toFixed(2)
+      ),
+
       comprimento,
       quantidade,
     };
@@ -180,27 +201,26 @@ async function atualizarElemento(
     throw new Error("Quantidade inválida.");
   }
 
-  let areaSecao = elemento.area_secao;
+  const volumeUnitario =
+    largura *
+    altura *
+    comprimento;
 
-  if (dados.areaSecao !== undefined) {
-    if (
-      dados.areaSecao !== null &&
-      dados.areaSecao !== ""
-    ) {
-      areaSecao = Number(dados.areaSecao);
+  const areaSecao = Number(
+    (
+      volumeUnitario *
+      quantidade
+    ).toFixed(4)
+  );
 
-      if (
-        !Number.isFinite(areaSecao) ||
-        areaSecao <= 0
-      ) {
-        throw new Error("Área da seção inválida.");
-      }
-    } else {
-      areaSecao = null;
-    }
-  }
+  const pesoUnitarioCalculado = Number(
+    (
+      volumeUnitario *
+      2500
+    ).toFixed(2)
+  );
 
-  let pesoUnitarioKg = elemento.peso_unitario_kg;
+  let pesoUnitarioKg = pesoUnitarioCalculado;
 
   if (dados.pesoUnitarioKg !== undefined) {
     if (
@@ -240,8 +260,6 @@ async function atualizarElemento(
       dados.aplicacao !== undefined
         ? dados.aplicacao?.trim().toUpperCase() || null
         : elemento.aplicacao,
-
-    area_secao: areaSecao,
 
     largura,
     altura,
