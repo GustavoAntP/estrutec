@@ -30,6 +30,8 @@ const Transportadora = require("./modelos/Transportadora");
 const Equipamento = require("./modelos/Equipamento");
 const Equipe = require("./modelos/Equipe");
 const ConfiguracaoFabricacaoPadrao = require("./modelos/ConfiguracaoFabricacaoPadrao");
+const CavaloMecanico = require("./modelos/CavaloMecanico");
+const Carreta =  require("./modelos/Carreta");
 
 // Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
@@ -40,6 +42,8 @@ const transportadoraRotas = require("./rotas/transportadoraRotas");
 const equipamentoRotas = require("./rotas/equipamentoRotas");
 const equipeRotas = require("./rotas/equipeRotas");
 const configuracaoFabricacaoPadraoRotas = require("./rotas/configuracaoFabricacaoPadraoRotas");
+const cavaloMecanicoRotas = require("./rotas/CavaloMecanicoRotas");
+const carretaRotas = require("./rotas/CarretaRotas");
 
 const app = express();
 
@@ -74,6 +78,9 @@ app.use("/transportadoras", transportadoraRotas);
 app.use("/equipamentos", equipamentoRotas);
 app.use("/equipes", equipeRotas);
 app.use("/configuracoes/fabricacao-padrao", configuracaoFabricacaoPadraoRotas);
+app.use("/cavalos-mecanicos", cavaloMecanicoRotas);
+app.use("/carretas", carretaRotas);
+
 
 app.get("/", (req, res) => {
   res.json({

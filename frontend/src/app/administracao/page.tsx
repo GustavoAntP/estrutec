@@ -162,6 +162,26 @@ export default function AdministracaoPage() {
               )
             }
           />
+
+          <Card
+            titulo="Cavalos Mecânicos"
+            descricao="Cadastre e gerencie os veículos utilizados no frete próprio."
+            onClick={() =>
+              router.push(
+                "/administracao/cavalos-mecanicos"
+              )
+            }
+          />
+
+          <Card
+            titulo="Carretas"
+            descricao="Cadastre e gerencie as carretas e suas capacidades de transporte."
+            onClick={() =>
+              router.push(
+                "/administracao/carretas"
+              )
+            }
+          />
         </div>
       </section>
     </main>

@@ -57,6 +57,33 @@ type ElementoLogistica = {
   peso_unitario_kg?: string | number | null;
 };
 
+type CavaloMecanicoCadastrado = {
+  id: number;
+  nome: string;
+  placa: string | null;
+  marca: string | null;
+  modelo: string | null;
+  consumo_carregado_km_l:
+    | string
+    | number;
+  consumo_vazio_km_l:
+    | string
+    | number;
+  ativo: boolean;
+};
+
+type CarretaCadastrada = {
+  id: number;
+  nome: string;
+  placa: string | null;
+  tipo: string | null;
+  capacidade_peso_kg:
+    | string
+    | number;
+  capacidade_pecas: number;
+  ativo: boolean;
+};
+
 type CustosLogistica = {
   tipo: "PROPRIO" | "TERCEIRIZADO";
 
@@ -133,6 +160,11 @@ export default function LogisticaPage() {
   const [confirmandoLogistica, setConfirmandoLogistica] = useState(false);
   const [logisticaConfirmada, setLogisticaConfirmada] = useState(false);
   const [sucessoConfirmacao, setSucessoConfirmacao] = useState("");
+  const [cavalosDisponiveis,setCavalosDisponiveis,] = useState<CavaloMecanicoCadastrado[]>([]);
+  const [carretasDisponiveis, setCarretasDisponiveis,] = useState<CarretaCadastrada[]>([]);
+  const [cavaloSelecionadoId, setCavaloSelecionadoId,] = useState("");
+  const [carretaSelecionadaId, setCarretaSelecionadaId,] = useState("");
+  const [carregandoCadastrosFrota, setCarregandoCadastrosFrota,] = useState(false);
 
   useEffect(() => {
     carregarLogistica();
@@ -140,6 +172,7 @@ export default function LogisticaPage() {
     carregarFreteProprio();
     carregarElementosSemPeso();
     carregarTransportadoras();
+    carregarCadastrosFrota();
   }, [id]);
 
   async function carregarLogistica() {
@@ -433,6 +466,161 @@ export default function LogisticaPage() {
     } finally {
         setSalvandoTerceirizado(false);
     }
+    }
+
+    async function carregarCadastrosFrota() {
+        setCarregandoCadastrosFrota(true);
+
+        try {
+            const [
+            respostaCavalos,
+            respostaCarretas,
+            ] = await Promise.all([
+            apiAutenticada(
+                "/cavalos-mecanicos"
+            ),
+            apiAutenticada(
+                "/carretas"
+            ),
+            ]);
+
+            if (
+            respostaCavalos.status === 401 ||
+            respostaCarretas.status === 401
+            ) {
+            localStorage.removeItem(
+                "estrutec_token"
+            );
+
+            router.push("/login");
+            return;
+            }
+
+            if (respostaCavalos.ok) {
+            const dadosCavalos =
+                await respostaCavalos.json();
+
+            const cavalos =
+                dadosCavalos.cavalos || [];
+
+            setCavalosDisponiveis(
+                cavalos.filter(
+                (
+                    cavalo: CavaloMecanicoCadastrado
+                ) => cavalo.ativo
+                )
+            );
+            }
+
+            if (respostaCarretas.ok) {
+            const dadosCarretas =
+                await respostaCarretas.json();
+
+            const carretas =
+                dadosCarretas.carretas || [];
+
+            setCarretasDisponiveis(
+                carretas.filter(
+                (
+                    carreta: CarretaCadastrada
+                ) => carreta.ativo
+                )
+            );
+            }
+        } catch {
+            // A logística continua funcionando
+            // mesmo sem carregar os cadastros.
+        } finally {
+            setCarregandoCadastrosFrota(
+            false
+            );
+        }
+    }
+
+    function selecionarCavalo(
+    cavaloId: string
+    ) {
+    setCavaloSelecionadoId(
+        cavaloId
+    );
+
+    if (!cavaloId) {
+        return;
+    }
+
+    const cavalo =
+        cavalosDisponiveis.find(
+        (item) =>
+            item.id ===
+            Number(cavaloId)
+        );
+
+    if (!cavalo) {
+        return;
+    }
+
+    setCavaloMecanico(
+        cavalo.nome
+    );
+
+    setConsumoCarregado(
+        String(
+        cavalo.consumo_carregado_km_l ??
+            ""
+        )
+    );
+
+    setConsumoVazio(
+        String(
+        cavalo.consumo_vazio_km_l ??
+            ""
+        )
+    );
+    }
+
+    function selecionarCarreta(
+    carretaId: string
+    ) {
+    setCarretaSelecionadaId(
+        carretaId
+    );
+
+    if (!carretaId) {
+        return;
+    }
+
+    const carretaSelecionada =
+        carretasDisponiveis.find(
+        (item) =>
+            item.id ===
+            Number(carretaId)
+        );
+
+    if (!carretaSelecionada) {
+        return;
+    }
+
+    setCarreta(
+        carretaSelecionada.nome
+    );
+
+    setCapacidadePecas(
+        String(
+        carretaSelecionada
+            .capacidade_pecas ?? ""
+        )
+    );
+
+    setCapacidadePeso(
+        String(
+        carretaSelecionada
+            .capacidade_peso_kg ?? ""
+        )
+    );
+
+    // Como a capacidade mudou,
+    // a sugestão anterior deixa de valer.
+    setSugestao(null);
     }
 
     async function carregarFreteProprio() {
@@ -1403,19 +1591,87 @@ export default function LogisticaPage() {
                 alterar={setQuantidadeViagens}
             />
 
-            <CampoLogistica
-                titulo="Cavalo mecânico"
-                valor={cavaloMecanico}
-                alterar={setCavaloMecanico}
-                tipo="text"
-            />
+            <div style={estilos.campo}>
+            <label>
+                Cavalo mecânico
+            </label>
 
-            <CampoLogistica
-                titulo="Carreta"
-                valor={carreta}
-                alterar={setCarreta}
-                tipo="text"
-            />
+            <select
+                value={cavaloSelecionadoId}
+                onChange={(evento) =>
+                selecionarCavalo(
+                    evento.target.value
+                )
+                }
+                disabled={
+                carregandoCadastrosFrota
+                }
+                style={estilos.input}
+            >
+                <option value="">
+                {carregandoCadastrosFrota
+                    ? "Carregando..."
+                    : cavaloMecanico
+                    ? `Atual: ${cavaloMecanico}`
+                    : "Selecione um cavalo mecânico"}
+                </option>
+
+                {cavalosDisponiveis.map(
+                (cavalo) => (
+                    <option
+                    key={cavalo.id}
+                    value={cavalo.id}
+                    >
+                    {cavalo.nome}
+                    {cavalo.placa
+                        ? ` - ${cavalo.placa}`
+                        : ""}
+                    </option>
+                )
+                )}
+            </select>
+            </div>
+
+            <div style={estilos.campo}>
+            <label>
+                Carreta
+            </label>
+
+            <select
+                value={carretaSelecionadaId}
+                onChange={(evento) =>
+                selecionarCarreta(
+                    evento.target.value
+                )
+                }
+                disabled={
+                carregandoCadastrosFrota
+                }
+                style={estilos.input}
+            >
+                <option value="">
+                {carregandoCadastrosFrota
+                    ? "Carregando..."
+                    : carreta
+                    ? `Atual: ${carreta}`
+                    : "Selecione uma carreta"}
+                </option>
+
+                {carretasDisponiveis.map(
+                (carretaItem) => (
+                    <option
+                    key={carretaItem.id}
+                    value={carretaItem.id}
+                    >
+                    {carretaItem.nome}
+                    {carretaItem.placa
+                        ? ` - ${carretaItem.placa}`
+                        : ""}
+                    </option>
+                )
+                )}
+            </select>
+            </div>
 
             <CampoLogistica
                 titulo="Capacidade de peças"
