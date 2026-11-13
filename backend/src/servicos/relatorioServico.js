@@ -1,26 +1,29 @@
 const puppeteer = require("puppeteer");
-const ElementoProjeto = require("../modelos/ElementoProjeto");
-const fabricacaoServico = require("./fabricacaoServico");
-const logisticaServico = require("./logisticaServico");
-const montagemServico = require("./montagemServico");
-const LogisticaProjeto = require("../modelos/LogisticaProjeto");
-const LogisticaPropria = require("../modelos/LogisticaPropria");
 const fs = require("fs");
 const path = require("path");
 
 const Projeto = require("../modelos/Projeto");
-const resumoFinanceiroServico = require(
-  "./resumoFinanceiroServico"
-);
+const ElementoProjeto = require("../modelos/ElementoProjeto");
+const LogisticaProjeto = require("../modelos/LogisticaProjeto");
+const LogisticaPropria = require("../modelos/LogisticaPropria");
+
+const fabricacaoServico = require("./fabricacaoServico");
+const logisticaServico = require("./logisticaServico");
+const montagemServico = require("./montagemServico");
+const resumoFinanceiroServico = require("./resumoFinanceiroServico");
 
 function formatarMoeda(valor) {
-  return Number(valor || 0).toLocaleString(
-    "pt-BR",
-    {
-      style: "currency",
-      currency: "BRL",
-    }
-  );
+  return Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+function formatarNumero(valor, casas = 2) {
+  return Number(valor || 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: casas,
+    maximumFractionDigits: casas,
+  });
 }
 
 function formatarData(data) {
@@ -43,18 +46,12 @@ function formatarDataHora(data = new Date()) {
   });
 }
 
-function formatarNumero(valor, casas = 2) {
-  return Number(valor || 0).toLocaleString(
-    "pt-BR",
-    {
-      minimumFractionDigits: casas,
-      maximumFractionDigits: casas,
-    }
-  );
-}
-
 function escaparHtml(valor) {
-  if (valor === null || valor === undefined) {
+  if (
+    valor === null ||
+    valor === undefined ||
+    valor === ""
+  ) {
     return "-";
   }
 
@@ -66,16 +63,75 @@ function escaparHtml(valor) {
     .replaceAll("'", "&#039;");
 }
 
+function linhaVazia(
+  colspan,
+  texto = "Nenhum registro encontrado."
+) {
+  return `
+    <tr>
+      <td colspan="${colspan}" class="vazio">
+        ${escaparHtml(texto)}
+      </td>
+    </tr>
+  `;
+}
+
+function obterVolumeTotalElemento(elemento) {
+  /*
+    No Estrutec, area_secao atualmente armazena
+    o volume total calculado do elemento:
+    largura × altura × comprimento × quantidade.
+  */
+  if (
+    elemento.area_secao !== null &&
+    elemento.area_secao !== undefined &&
+    elemento.area_secao !== ""
+  ) {
+    return Number(elemento.area_secao);
+  }
+
+  const largura =
+    Number(elemento.largura || 0);
+
+  const altura =
+    Number(elemento.altura || 0);
+
+  const comprimento =
+    Number(elemento.comprimento || 0);
+
+  const quantidade =
+    Number(elemento.quantidade || 0);
+
+  return (
+    largura *
+    altura *
+    comprimento *
+    quantidade
+  );
+}
+
+function obterPesoTotalElemento(elemento) {
+  return (
+    Number(
+      elemento.peso_unitario_kg || 0
+    ) *
+    Number(
+      elemento.quantidade || 0
+    )
+  );
+}
+
 async function gerarRelatorioFinal(
   projetoId,
   usuarioId
 ) {
-  const projeto = await Projeto.findOne({
-    where: {
-      id: projetoId,
-      usuario_id: usuarioId,
-    },
-  });
+  const projeto =
+    await Projeto.findOne({
+      where: {
+        id: projetoId,
+        usuario_id: usuarioId,
+      },
+    });
 
   if (!projeto) {
     throw new Error(
@@ -83,34 +139,73 @@ async function gerarRelatorioFinal(
     );
   }
 
-  if (projeto.status !== "FINALIZADO") {
+  if (
+    projeto.status !==
+    "FINALIZADO"
+  ) {
     throw new Error(
       "O projeto deve estar finalizado antes de gerar o relatório."
     );
   }
 
-  const resumo =
-    await resumoFinanceiroServico
+  /*
+    Carrega os cálculos utilizando os mesmos
+    serviços usados pelas telas do Estrutec.
+  */
+  const [
+    resumo,
+    fabricacao,
+    logistica,
+    montagem,
+    elementos,
+  ] = await Promise.all([
+    resumoFinanceiroServico
       .calcularResumoFinanceiro(
         projetoId,
         usuarioId
-      );
+      ),
 
-  const fabricacao =
-    await fabricacaoServico.calcularCustos(
+    fabricacaoServico
+      .calcularCustos(
         projetoId,
         usuarioId
-    );
+      ),
 
-  const logistica =
-    await logisticaServico.calcularCustoLogistica(
+    logisticaServico
+      .calcularCustoLogistica(
         projetoId,
         usuarioId
-    );
+      ),
 
-    let freteProprio = null;
+    montagemServico
+      .calcularCustos(
+        projetoId,
+        usuarioId
+      ),
 
-  if (logistica.tipoFrete === "PROPRIO") {
+    ElementoProjeto.findAll({
+      where: {
+        projeto_id: projetoId,
+      },
+
+      order: [
+        ["tipo", "ASC"],
+        ["id", "ASC"],
+      ],
+    }),
+  ]);
+
+  /*
+    Dados salvos da frota própria.
+    Mantemos o snapshot do projeto, evitando
+    depender do cadastro global atual.
+  */
+  let freteProprio = null;
+
+  if (
+    logistica.tipoFrete ===
+    "PROPRIO"
+  ) {
     const configuracaoLogistica =
       await LogisticaProjeto.findOne({
         where: {
@@ -118,7 +213,9 @@ async function gerarRelatorioFinal(
         },
       });
 
-    if (configuracaoLogistica) {
+    if (
+      configuracaoLogistica
+    ) {
       freteProprio =
         await LogisticaPropria.findOne({
           where: {
@@ -129,883 +226,1339 @@ async function gerarRelatorioFinal(
     }
   }
 
-  const montagem =
-    await montagemServico.calcularCustos(
-        projetoId,
-        usuarioId
+  /*
+    Totais físicos dos elementos.
+  */
+  const totalVolumeElementos =
+    elementos.reduce(
+      (total, elemento) =>
+        total +
+        obterVolumeTotalElemento(
+          elemento
+        ),
+      0
     );
 
-  const elementos =
-    await ElementoProjeto.findAll({
-        where: {
-        projeto_id: projetoId,
-        },
-        order: [
-        ["tipo", "ASC"],
-        ["id", "ASC"],
-        ],
-    });
+  const totalPesoElementos =
+    elementos.reduce(
+      (total, elemento) =>
+        total +
+        obterPesoTotalElemento(
+          elemento
+        ),
+      0
+    );
 
-  const linhasElementos = elementos
-  .map((elemento) => {
-    return `
-      <tr>
-        <td>${escaparHtml(elemento.tipo)}</td>
-        <td>${escaparHtml(elemento.secao)}</td>
-        <td>${formatarNumero(elemento.largura, 3)}</td>
-        <td>${formatarNumero(elemento.altura, 3)}</td>
-        <td>${formatarNumero(elemento.comprimento, 3)}</td>
-        <td class="centralizado">${elemento.quantidade}</td>
-        <td class="valor">
-          ${formatarNumero(
-            elemento.peso_unitario_kg,
-            2
-          )}
-        </td>
-      </tr>
-    `;
-  })
-  .join("");
+  /*
+    Tabela de elementos.
+  */
+  const linhasElementos =
+    elementos.length > 0
+      ? elementos
+          .map((elemento) => {
+            const volumeTotal =
+              obterVolumeTotalElemento(
+                elemento
+              );
 
-  const materiaisFabricacao = Object.entries(
-  fabricacao.materiais
-  )
-  .map(([nome, material]) => {
-    return `
-      <tr>
-        <td>
-          ${nome.charAt(0).toUpperCase() +
-          nome.slice(1)}
-        </td>
+            const pesoTotal =
+              obterPesoTotalElemento(
+                elemento
+              );
 
-        <td class="valor">
-          ${formatarNumero(material.quantidade)}
-          ${material.unidade || ""}
-        </td>
+            return `
+              <tr>
+                <td>
+                  <strong>
+                    ${escaparHtml(
+                      elemento.nome_aplicacao ||
+                        elemento.tipo
+                    )}
+                  </strong>
+                </td>
 
-        <td class="valor">
-          ${
-            material.precoUnitario !== undefined
-              ? formatarMoeda(
-                  material.precoUnitario
-                )
-              : "-"
-          }
-        </td>
+                <td>
+                  ${escaparHtml(
+                    elemento.tipo
+                  )}
+                </td>
 
-        <td class="valor">
-          ${formatarMoeda(material.custo)}
-        </td>
-      </tr>
-    `;
-  })
-  .join("");
+                <td>
+                  ${escaparHtml(
+                    elemento.secao
+                  )}
+                </td>
+
+                <td class="valor">
+                  ${formatarNumero(
+                    elemento.comprimento,
+                    3
+                  )}
+                </td>
+
+                <td class="centralizado">
+                  ${Number(
+                    elemento.quantidade ||
+                      0
+                  )}
+                </td>
+
+                <td class="valor">
+                  ${formatarNumero(
+                    volumeTotal,
+                    4
+                  )}
+                </td>
+
+                <td class="valor">
+                  ${formatarNumero(
+                    elemento.peso_unitario_kg,
+                    2
+                  )}
+                </td>
+
+                <td class="valor">
+                  ${formatarNumero(
+                    pesoTotal,
+                    2
+                  )}
+                </td>
+              </tr>
+            `;
+          })
+          .join("")
+      : linhaVazia(
+          8,
+          "Nenhum elemento pré-moldado cadastrado."
+        );
+
+  /*
+    Materiais de fabricação.
+  */
+  const materiaisFabricacao =
+    Object.entries(
+      fabricacao.materiais || {}
+    );
+
+  const linhasMateriais =
+    materiaisFabricacao.length > 0
+      ? materiaisFabricacao
+          .map(
+            ([
+              nome,
+              material,
+            ]) => {
+              const nomeMaterial =
+                nome
+                  .charAt(0)
+                  .toUpperCase() +
+                nome.slice(1);
+
+              return `
+                <tr>
+                  <td>
+                    ${escaparHtml(
+                      nomeMaterial
+                    )}
+                  </td>
+
+                  <td class="valor">
+                    ${formatarNumero(
+                      material.quantidade
+                    )}
+                    ${escaparHtml(
+                      material.unidade ||
+                        ""
+                    )}
+                  </td>
+
+                  <td class="valor">
+                    ${
+                      material.precoUnitario !==
+                        undefined &&
+                      material.precoUnitario !==
+                        null
+                        ? formatarMoeda(
+                            material.precoUnitario
+                          )
+                        : "-"
+                    }
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      material.custo
+                    )}
+                  </td>
+                </tr>
+              `;
+            }
+          )
+          .join("")
+      : linhaVazia(
+          4,
+          "Nenhum material calculado."
+        );
+
+  /*
+    Equipamentos de montagem.
+  */
+  const equipamentos =
+    montagem.equipamentos
+      ?.detalhes || [];
 
   const linhasEquipamentos =
-  montagem.equipamentos.detalhes
-    .map((equipamento) => {
-      return `
-        <tr>
-          <td>${escaparHtml(equipamento.nome)}</td>
+    equipamentos.length > 0
+      ? equipamentos
+          .map(
+            (equipamento) => `
+              <tr>
+                <td>
+                  ${escaparHtml(
+                    equipamento.nome
+                  )}
+                </td>
 
-          <td class="centralizado">
-            ${equipamento.quantidade}
-          </td>
+                <td class="centralizado">
+                  ${Number(
+                    equipamento.quantidade ||
+                      0
+                  )}
+                </td>
 
-          <td>
-            ${escaparHtml(
-              equipamento.tipoCobranca
-            )}
-          </td>
+                <td>
+                  ${escaparHtml(
+                    equipamento.tipoCobranca
+                  )}
+                </td>
 
-          <td class="valor">
-            ${formatarNumero(
-              equipamento.tempoUso
-            )}
-          </td>
+                <td class="valor">
+                  ${formatarNumero(
+                    equipamento.tempoUso
+                  )}
+                </td>
 
-          <td class="valor">
-            ${formatarMoeda(
-              equipamento.valorUnitario
-            )}
-          </td>
+                <td class="valor">
+                  ${formatarMoeda(
+                    equipamento.valorUnitario
+                  )}
+                </td>
 
-          <td class="valor">
-            ${formatarMoeda(
-              equipamento.custoTotal
-            )}
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+                <td class="valor">
+                  ${formatarMoeda(
+                    equipamento.custoTotal
+                  )}
+                </td>
+              </tr>
+            `
+          )
+          .join("")
+      : linhaVazia(
+          6,
+          "Nenhum equipamento informado."
+        );
+
+  /*
+    Equipes de montagem.
+  */
+  const equipes =
+    montagem.equipes
+      ?.detalhes || [];
 
   const linhasEquipes =
-  montagem.equipes.detalhes
-    .map((equipe) => {
-      return `
-        <tr>
-          <td>${escaparHtml(equipe.funcao)}</td>
+    equipes.length > 0
+      ? equipes
+          .map(
+            (equipe) => `
+              <tr>
+                <td>
+                  ${escaparHtml(
+                    equipe.funcao
+                  )}
+                </td>
 
-          <td class="centralizado">
-            ${equipe.quantidadeTrabalhadores}
-          </td>
+                <td class="centralizado">
+                  ${Number(
+                    equipe
+                      .quantidadeTrabalhadores ||
+                      0
+                  )}
+                </td>
 
-          <td class="centralizado">
-            ${formatarNumero(
-              equipe.quantidadeDias
-            )}
-          </td>
+                <td class="centralizado">
+                  ${formatarNumero(
+                    equipe.quantidadeDias
+                  )}
+                </td>
 
-          <td class="valor">
-            ${formatarMoeda(
-              equipe.custoDiarioPorTrabalhador
-            )}
-          </td>
+                <td class="valor">
+                  ${formatarMoeda(
+                    equipe
+                      .custoDiarioPorTrabalhador
+                  )}
+                </td>
 
-          <td class="valor">
-            ${formatarMoeda(
-              equipe.custoTotal
-            )}
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+                <td class="valor">
+                  ${formatarMoeda(
+                    equipe.custoTotal
+                  )}
+                </td>
+              </tr>
+            `
+          )
+          .join("")
+      : linhaVazia(
+          5,
+          "Nenhuma equipe informada."
+        );
 
-    const caminhoLogo = path.join(
-    __dirname,
-    "../assets/LogoT.jpg"
+  /*
+    Logo oficial da Estrutec.
+  */
+  const caminhoLogo =
+    path.join(
+      __dirname,
+      "../assets/estrutec-logo.png"
     );
 
-    const logoBase64 = fs
-    .readFileSync(caminhoLogo)
-    .toString("base64");
+  let logoBase64 = "";
 
-    const dataEmissao = formatarDataHora();
+  if (
+    fs.existsSync(
+      caminhoLogo
+    )
+  ) {
+    logoBase64 = fs
+      .readFileSync(
+        caminhoLogo
+      )
+      .toString("base64");
+  }
 
-    const html = `
+  const logoHtml =
+    logoBase64
+      ? `
+        <img
+          src="data:image/png;base64,${logoBase64}"
+          class="logo-relatorio"
+          alt="Estrutec"
+        />
+      `
+      : `
+        <div class="logo-texto">
+          ESTRUTEC
+        </div>
+      `;
+
+  const dataEmissao =
+    formatarDataHora();
+
+  /*
+    O campo cliente continua sendo mantido
+    como snapshot no projeto.
+  */
+  const clienteProjeto =
+    projeto.cliente ||
+    "-";
+
+  const detalheLogistica =
+    logistica.detalhes ||
+    {};
+
+  const transporte =
+    detalheLogistica.transporte ||
+    {};
+
+  const combustivel =
+    detalheLogistica.combustivel ||
+    {};
+
+  const custosLogistica =
+    detalheLogistica.custos ||
+    {};
+
+  const html = `
     <!DOCTYPE html>
 
     <html lang="pt-BR">
 
     <head>
-    <meta charset="UTF-8">
+      <meta charset="UTF-8">
 
-    <style>
+      <style>
         * {
-        box-sizing: border-box;
+          box-sizing: border-box;
         }
 
         body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        color: #222;
-        font-size: 10px;
+          margin: 0;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+
+          color: #171717;
+          font-size: 9.5px;
+          line-height: 1.35;
         }
 
-        .cabecalho {
-        border-bottom: 3px solid #222;
-        padding-bottom: 14px;
-        margin-bottom: 22px;
+        .capa {
+          border-bottom:
+            3px solid #F97316;
+
+          padding-bottom: 18px;
+          margin-bottom: 24px;
         }
 
-        .cabecalho h1 {
-        margin: 0;
-        font-size: 26px;
+        .capa-topo {
+          display: flex;
+          align-items: center;
+
+          justify-content:
+            space-between;
+
+          gap: 24px;
         }
 
-        .cabecalho p {
-        margin: 5px 0 0;
-        color: #666;
-        font-size: 11px;
+        .logo-relatorio {
+          max-width: 170px;
+          max-height: 75px;
+
+          object-fit:
+            contain;
+        }
+
+        .logo-texto {
+          font-size: 28px;
+          font-weight: 800;
+
+          letter-spacing:
+            1px;
+        }
+
+        .capa-identificacao {
+          text-align: right;
+        }
+
+        .capa-identificacao span {
+          display: block;
+
+          color: #78716C;
+          font-size: 9px;
+        }
+
+        .capa-identificacao strong {
+          display: block;
+
+          margin-top: 4px;
+
+          font-size: 12px;
+        }
+
+        .capa h1 {
+          margin:
+            20px 0 4px;
+
+          font-size: 24px;
+          color: #171717;
+        }
+
+        .capa p {
+          margin: 0;
+
+          color: #78716C;
+          font-size: 11px;
+        }
+
+        .selo-finalizado {
+          display:
+            inline-block;
+
+          margin-top: 12px;
+
+          padding:
+            5px 9px;
+
+          border-radius:
+            20px;
+
+          color: #15803D;
+
+          background:
+            #F0FDF4;
+
+          border:
+            1px solid #BBF7D0;
+
+          font-size: 8px;
+
+          font-weight: 700;
+
+          text-transform:
+            uppercase;
+
+          letter-spacing:
+            0.6px;
         }
 
         h2 {
-        font-size: 15px;
-        margin-top: 24px;
-        margin-bottom: 10px;
-        border-bottom: 1px solid #aaa;
-        padding-bottom: 5px;
+          margin:
+            24px 0 10px;
+
+          padding-bottom:
+            6px;
+
+          border-bottom:
+            2px solid #E7E5E4;
+
+          color: #171717;
+
+          font-size: 15px;
+
+          page-break-after:
+            avoid;
         }
 
         h3 {
-        font-size: 12px;
-        margin-top: 18px;
-        margin-bottom: 8px;
+          margin:
+            17px 0 8px;
+
+          color: #44403C;
+
+          font-size: 11.5px;
+
+          page-break-after:
+            avoid;
         }
 
         table {
-        width: 100%;
-        border-collapse: collapse;
+          width: 100%;
+
+          border-collapse:
+            collapse;
         }
 
         th,
         td {
-        padding: 6px;
-        border: 1px solid #ddd;
+          padding:
+            6px 7px;
+
+          border:
+            1px solid #E7E5E4;
+
+          vertical-align:
+            middle;
         }
 
         th {
-        background: #f1f1f1;
-        text-align: left;
-        }
+          background:
+            #FAFAF9;
 
-        .dados td:first-child {
-        font-weight: bold;
-        width: 28%;
-        }
+          color:
+            #57534E;
 
-        .valor {
-        text-align: right;
-        }
+          font-size:
+            8.5px;
 
-        .centralizado {
-        text-align: center;
-        }
+          font-weight:
+            700;
 
-        .total {
-        font-weight: bold;
-        background: #f5f5f5;
-        }
+          text-align:
+            left;
 
-        .bloco-resumo {
-        display: flex;
-        gap: 10px;
-        margin-top: 12px;
-        }
+          text-transform:
+            uppercase;
 
-        .card {
-        flex: 1;
-        border: 1px solid #ddd;
-        padding: 10px;
-        }
-
-        .card span {
-        display: block;
-        color: #666;
-        font-size: 9px;
-        }
-
-        .card strong {
-        display: block;
-        margin-top: 4px;
-        font-size: 14px;
-        }
-
-        .valor-final {
-        margin-top: 25px;
-        padding: 16px;
-        border: 2px solid #222;
-        text-align: right;
-        page-break-inside: avoid;
-        }
-
-        .valor-final span {
-        display: block;
-        font-size: 11px;
-        }
-
-        .valor-final strong {
-        font-size: 22px;
-        }
-
-        .quebra {
-        page-break-before: always;
-        }
-
-        .evitar-quebra {
-        page-break-inside: avoid;
-        }
-
-        .rodape {
-        margin-top: 35px;
-        text-align: center;
-        color: #777;
-        font-size: 9px;
-        }
-
-        @page {
-        size: A4;
-        }
-
-        thead {
-        display: table-header-group;
-        }
-
-        tfoot {
-        display: table-footer-group;
+          letter-spacing:
+            0.25px;
         }
 
         tr {
-        page-break-inside: avoid;
+          page-break-inside:
+            avoid;
         }
 
-        h2,
-        h3 {
-        page-break-after: avoid;
+        thead {
+          display:
+            table-header-group;
         }
 
-        .secao {
-        margin-bottom: 20px;
+        .dados td:first-child {
+          width: 28%;
+
+          color:
+            #57534E;
+
+          font-weight:
+            700;
+
+          background:
+            #FAFAF9;
         }
 
-        .informacao-relatorio {
-        margin-top: 10px;
-        font-size: 9px;
-        color: #666;
+        .valor {
+          text-align: right;
+
+          white-space:
+            nowrap;
+        }
+
+        .centralizado {
+          text-align:
+            center;
+        }
+
+        .total {
+          font-weight:
+            700;
+
+          background:
+            #FFF7ED;
+        }
+
+        .vazio {
+          padding: 16px;
+
+          text-align:
+            center;
+
+          color:
+            #78716C;
+        }
+
+        .resumo-cards {
+          display: flex;
+
+          gap: 9px;
+
+          margin-top:
+            12px;
+
+          page-break-inside:
+            avoid;
+        }
+
+        .card {
+          flex: 1;
+
+          min-width: 0;
+
+          border:
+            1px solid #E7E5E4;
+
+          border-radius:
+            6px;
+
+          padding: 10px;
+
+          background:
+            #FFFFFF;
+        }
+
+        .card span {
+          display: block;
+
+          color:
+            #78716C;
+
+          font-size:
+            8px;
+        }
+
+        .card strong {
+          display: block;
+
+          margin-top:
+            4px;
+
+          color:
+            #171717;
+
+          font-size:
+            13px;
+        }
+
+        .card.destaque {
+          border-color:
+            #FED7AA;
+
+          background:
+            #FFF7ED;
         }
 
         .observacoes {
-        margin-top: 12px;
-        padding: 10px;
-        border: 1px solid #ddd;
-        background: #fafafa;
-        line-height: 1.5;
+          margin-top:
+            12px;
+
+          padding:
+            10px 12px;
+
+          border:
+            1px solid #E7E5E4;
+
+          border-left:
+            3px solid #F97316;
+
+          border-radius:
+            4px;
+
+          background:
+            #FAFAF9;
+
+          line-height:
+            1.5;
+
+          page-break-inside:
+            avoid;
+        }
+
+        .observacoes strong {
+          color:
+            #44403C;
+        }
+
+        .quebra {
+          page-break-before:
+            always;
+        }
+
+        .valor-final {
+          margin-top:
+            22px;
+
+          padding:
+            18px;
+
+          background:
+            #FFF7ED;
+
+          text-align:
+            right;
+
+          page-break-inside:
+            avoid;
+        }
+
+        .valor-final span {
+          display: block;
+
+          color:
+            #9A3412;
+
+          font-size:
+            9px;
+
+          font-weight:
+            700;
+
+          letter-spacing:
+            0.5px;
+        }
+
+        .valor-final strong {
+          display: block;
+
+          margin-top:
+            5px;
+
+          color:
+            #171717;
+
+          font-size:
+            22px;
         }
 
         .assinaturas {
-        margin-top: 55px;
-        display: flex;
-        gap: 50px;
-        page-break-inside: avoid;
+          display: flex;
+
+          gap: 50px;
+
+          margin-top:
+            55px;
+
+          page-break-inside:
+            avoid;
         }
 
         .assinatura {
-        flex: 1;
-        text-align: center;
-        padding-top: 8px;
-        border-top: 1px solid #444;
+          flex: 1;
+
+          padding-top:
+            8px;
+
+          border-top:
+            1px solid #44403C;
+
+          text-align:
+            center;
+
+          color:
+            #57534E;
+
+          font-size:
+            9px;
         }
-    </style>
+
+        .rodape-corpo {
+          margin-top:
+            28px;
+
+          text-align:
+            center;
+
+          color:
+            #A8A29E;
+
+          font-size:
+            8px;
+        }
+
+        @page {
+          size: A4;
+        }
+      </style>
     </head>
 
     <body>
 
-    <div class="cabecalho">
-    <h1>ESTRUTEC</h1>
+      <section class="capa">
 
-    <p>
-        Relatório de Orçamentação e Planejamento
-        de Estruturas Pré-Moldadas
-    </p>
+      <div class="capa-topo">
 
-    <div class="informacao-relatorio">
-        Código: ${escaparHtml(projeto.codigo)}
-        |
-        Emitido em: ${dataEmissao}
-    </div>
-    </div>
+        <div
+          class="capa-identificacao"
+          style="margin-left: auto;"
+        >
+            <span>
+              Código do projeto
+            </span>
 
-    <h2>1. Dados do Projeto</h2>
+            <strong>
+              ${escaparHtml(
+                projeto.codigo
+              )}
+            </strong>
 
-    <table class="dados">
+            <span
+              style="
+                margin-top: 7px;
+              "
+            >
+              Emitido em
+              ${dataEmissao}
+            </span>
+          </div>
+
+        </div>
+
+        <h1>
+          Relatório Final do Orçamento
+        </h1>
+
+        <p>
+          Orçamentação e planejamento
+          de estruturas pré-moldadas
+        </p>
+
+        <span
+          class="selo-finalizado"
+        >
+          Projeto finalizado
+        </span>
+
+      </section>
+
+
+      <!-- DADOS DO PROJETO -->
+
+      <h2>
+        1. Dados do Projeto
+      </h2>
+
+      <table class="dados">
+
         <tr>
-        <td>Código</td>
-        <td>${escaparHtml(projeto.codigo)}</td>
-        </tr>
+          <td>
+            Código
+          </td>
 
-        <tr>
-        <td>Projeto</td>
-        <td>${escaparHtml(projeto.nome)}</td>
-        </tr>
-
-        <tr>
-        <td>Cliente</td>
-        <td>${escaparHtml(projeto.cliente)}</td>
-        </tr>
-
-        <tr>
-        <td>Responsável</td>
-        <td>
+          <td>
             ${escaparHtml(
-            projeto.responsavel || "-"
+              projeto.codigo
             )}
-        </td>
+          </td>
         </tr>
 
         <tr>
-        <td>Origem</td>
-        <td>
-            ${escaparHtml(projeto.origem || "-")}
-        </td>
+          <td>
+            Projeto
+          </td>
+
+          <td>
+            ${escaparHtml(
+              projeto.nome
+            )}
+          </td>
         </tr>
 
         <tr>
-        <td>Destino</td>
-        <td>
-            ${escaparHtml(projeto.destino || "-")}
-        </td>
+          <td>
+            Empresa cliente
+          </td>
+
+          <td>
+            ${escaparHtml(
+              clienteProjeto
+            )}
+          </td>
         </tr>
 
         <tr>
-        <td>Prazo</td>
-        <td>${formatarData(projeto.prazo)}</td>
+          <td>
+            Responsável
+          </td>
+
+          <td>
+            ${escaparHtml(
+              projeto.responsavel ||
+                "-"
+            )}
+          </td>
         </tr>
 
         <tr>
-        <td>Status</td>
-        <td>${escaparHtml(projeto.status)}</td>
+          <td>
+            Origem
+          </td>
+
+          <td>
+            ${escaparHtml(
+              projeto.origem ||
+                "-"
+            )}
+          </td>
         </tr>
-    </table>
 
-    ${
-    projeto.observacoes
-        ? `
-        <div class="observacoes">
-            <strong>Observações do projeto</strong>
+        <tr>
+          <td>
+            Destino
+          </td>
 
-            <br><br>
+          <td>
+            ${escaparHtml(
+              projeto.destino ||
+                "-"
+            )}
+          </td>
+        </tr>
 
-            ${escaparHtml(projeto.observacoes)}
-        </div>
-        `
-        : ""
-    }
+        <tr>
+          <td>
+            Prazo
+          </td>
 
-    <h2>2. Elementos Pré-Moldados</h2>
+          <td>
+            ${formatarData(
+              projeto.prazo
+            )}
+          </td>
+        </tr>
 
-    <table>
+        <tr>
+          <td>
+            Status
+          </td>
+
+          <td>
+            Finalizado
+          </td>
+        </tr>
+
+      </table>
+
+      ${
+        projeto.observacoes
+          ? `
+            <div
+              class="observacoes"
+            >
+              <strong>
+                Observações do projeto
+              </strong>
+
+              <br><br>
+
+              ${escaparHtml(
+                projeto.observacoes
+              )}
+            </div>
+          `
+          : ""
+      }
+
+
+      <!-- ELEMENTOS -->
+
+      <h2>
+        2. Elementos Pré-Moldados
+      </h2>
+
+      <table>
+
         <thead>
-        <tr>
-            <th>Tipo</th>
-            <th>Seção</th>
-            <th>B (m)</th>
-            <th>H (m)</th>
-            <th>Comp. (m)</th>
-            <th>Qtde.</th>
-            <th>Peso Unit. (kg)</th>
-        </tr>
+          <tr>
+            <th>
+              Elemento
+            </th>
+
+            <th>
+              Tipo
+            </th>
+
+            <th>
+              Seção
+            </th>
+
+            <th>
+              Comp. (m)
+            </th>
+
+            <th>
+              Qtde.
+            </th>
+
+            <th>
+              Volume total (m³)
+            </th>
+
+            <th>
+              Peso unit. (kg)
+            </th>
+
+            <th>
+              Peso total (kg)
+            </th>
+          </tr>
         </thead>
 
         <tbody>
-        ${linhasElementos}
+          ${linhasElementos}
         </tbody>
-    </table>
 
-    <div class="bloco-resumo">
+      </table>
+
+
+      <div
+        class="resumo-cards"
+      >
+
         <div class="card">
-        <span>Total de peças</span>
-        <strong>
-            ${fabricacao.resumo.totalPecas}
-        </strong>
+
+          <span>
+            Total de peças
+          </span>
+
+          <strong>
+            ${
+              fabricacao.resumo
+                ?.totalPecas ||
+              0
+            }
+          </strong>
+
         </div>
 
-        <div class="card">
-        <span>Total de vigas</span>
-        <strong>
-            ${fabricacao.resumo.totalVigas}
-        </strong>
-        </div>
 
         <div class="card">
-        <span>Volume de concreto</span>
-        <strong>
+
+          <span>
+            Total de vigas
+          </span>
+
+          <strong>
+            ${
+              fabricacao.resumo
+                ?.totalVigas ||
+              0
+            }
+          </strong>
+
+        </div>
+
+
+        <div class="card">
+
+          <span>
+            Volume calculado
+          </span>
+
+          <strong>
             ${formatarNumero(
-            fabricacao.resumo.volumeConcretoM3,
-            3
-            )} m³
-        </strong>
+              totalVolumeElementos,
+              3
+            )}
+            m³
+          </strong>
+
         </div>
-    </div>
 
-    <div class="quebra"></div>
 
-    <h2>3. Fabricação</h2>
+        <div class="card">
 
-    <table>
+          <span>
+            Peso total estimado
+          </span>
+
+          <strong>
+            ${formatarNumero(
+              totalPesoElementos,
+              2
+            )}
+            kg
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="quebra">
+      </div>
+
+
+      <!-- FABRICAÇÃO -->
+
+      <h2>
+        3. Fabricação
+      </h2>
+
+
+      <div
+        class="resumo-cards"
+      >
+
+        <div class="card">
+
+          <span>
+            Volume de concreto
+          </span>
+
+          <strong>
+            ${formatarNumero(
+              fabricacao.resumo
+                ?.volumeConcretoM3,
+              3
+            )}
+            m³
+          </strong>
+
+        </div>
+
+
+        <div
+          class="card destaque"
+        >
+
+          <span>
+            Custo total da fabricação
+          </span>
+
+          <strong>
+            ${formatarMoeda(
+              fabricacao
+                .custoTotalFabricacao
+            )}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <h3>
+        3.1 Materiais e insumos
+      </h3>
+
+      <table>
+
         <thead>
-        <tr>
-            <th>Material</th>
-            <th>Quantidade</th>
-            <th>Preço Unitário</th>
-            <th>Custo</th>
-        </tr>
+          <tr>
+
+            <th>
+              Material
+            </th>
+
+            <th>
+              Quantidade
+            </th>
+
+            <th>
+              Preço Unitário
+            </th>
+
+            <th>
+              Custo
+            </th>
+
+          </tr>
         </thead>
 
         <tbody>
-        ${materiaisFabricacao}
 
-        <tr class="total">
+          ${linhasMateriais}
+
+          <tr class="total">
+
             <td colspan="3">
-            Custo Total da Fabricação
+              Custo Total da Fabricação
             </td>
 
             <td class="valor">
-            ${formatarMoeda(
-                fabricacao.custoTotalFabricacao
-            )}
+              ${formatarMoeda(
+                fabricacao
+                  .custoTotalFabricacao
+              )}
             </td>
-        </tr>
+
+          </tr>
+
         </tbody>
-    </table>
 
-    <h2>4. Logística</h2>
+      </table>
 
-    ${
-        logistica.tipoFrete === "TERCEIRIZADO"
-        ? `
+
+      <!-- LOGÍSTICA -->
+
+      <h2>
+        4. Logística
+      </h2>
+
+      ${
+        logistica.tipoFrete ===
+        "TERCEIRIZADO"
+          ? `
+
+            <div
+              class="resumo-cards"
+            >
+
+              <div class="card">
+
+                <span>
+                  Modalidade
+                </span>
+
+                <strong>
+                  Frete terceirizado
+                </strong>
+
+              </div>
+
+
+              <div
+                class="card destaque"
+              >
+
+                <span>
+                  Custo total
+                </span>
+
+                <strong>
+                  ${formatarMoeda(
+                    logistica
+                      .custoLogistica
+                  )}
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            <h3>
+              4.1 Cotação da transportadora
+            </h3>
+
+
             <table class="dados">
-            <tr>
-                <td>Tipo de frete</td>
-                <td>Terceirizado</td>
-            </tr>
-
-            <tr>
-                <td>Transportadora</td>
-                <td>
-                ${escaparHtml(
-                    logistica.detalhes.empresa
-                )}
-                </td>
-            </tr>
-
-            <tr>
-                <td>Validade da cotação</td>
-                <td>
-                ${formatarData(
-                    logistica.detalhes
-                    .validadeCotacao
-                )}
-                </td>
-            </tr>
-
-            <tr>
-                <td>Custo da logística</td>
-                <td>
-                ${formatarMoeda(
-                    logistica.custoLogistica
-                )}
-                </td>
-            </tr>
-
-            <tr>
-                <td>Observações</td>
-                <td>
-                ${escaparHtml(
-                    logistica.detalhes
-                    .observacoes || "-"
-                )}
-                </td>
-            </tr>
-            </table>
-        `
-          : `
-            <h3>4.1 Dados do Transporte</h3>
-
-            <table class="dados">
-              <tr>
-                <td>Tipo de frete</td>
-                <td>Próprio</td>
-              </tr>
 
               <tr>
-                <td>Cavalo mecânico</td>
+
+                <td>
+                  Transportadora
+                </td>
+
                 <td>
                   ${escaparHtml(
-                    logistica.detalhes.transporte
-                      .cavaloMecanico || "-"
+                    detalheLogistica
+                      .empresa ||
+                      "-"
                   )}
                 </td>
+
               </tr>
 
+
               <tr>
-                <td>Carreta</td>
+
+                <td>
+                  Número da cotação
+                </td>
+
                 <td>
                   ${escaparHtml(
-                    logistica.detalhes.transporte
-                      .carreta || "-"
+                    detalheLogistica
+                      .numeroCotacao ||
+                      "-"
                   )}
                 </td>
+
               </tr>
+
 
               <tr>
-                <td>Capacidade de peças</td>
+
                 <td>
-                  ${
-                    freteProprio?.capacidade_pecas
-                      ?? "-"
-                  }
+                  Validade da cotação
                 </td>
-              </tr>
 
-              <tr>
-                <td>Capacidade de peso</td>
                 <td>
-                  ${
-                    freteProprio?.capacidade_peso_kg
-                      ? `${formatarNumero(
-                          freteProprio
-                            .capacidade_peso_kg
-                        )} kg`
-                      : "-"
-                  }
-                </td>
-              </tr>
-
-              <tr>
-                <td>Quantidade de viagens</td>
-                <td>
-                  ${logistica.detalhes.transporte
-                    .quantidadeViagens}
-                </td>
-              </tr>
-
-              <tr>
-                <td>Distância de ida</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.transporte
-                      .distanciaIdaKm
-                  )} km
-                </td>
-              </tr>
-
-              <tr>
-                <td>Considerar ida e volta</td>
-                <td>
-                  ${
-                    logistica.detalhes.transporte
-                      .considerarIdaVolta
-                      ? "Sim"
-                      : "Não"
-                  }
-                </td>
-              </tr>
-
-              <tr>
-                <td>Km carregado</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.transporte
-                      .kmCarregado
-                  )} km
-                </td>
-              </tr>
-
-              <tr>
-                <td>Km vazio</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.transporte
-                      .kmVazio
-                  )} km
-                </td>
-              </tr>
-
-              <tr class="total">
-                <td>Quilometragem total</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.transporte
-                      .kmTotal
-                  )} km
-                </td>
-              </tr>
-            </table>
-
-
-            <h3>4.2 Combustível</h3>
-
-            <table class="dados">
-              <tr>
-                <td>Consumo carregado</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.combustivel
-                      .consumoCarregadoKmL
-                  )} km/L
-                </td>
-              </tr>
-
-              <tr>
-                <td>Consumo vazio</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.combustivel
-                      .consumoVazioKmL
-                  )} km/L
-                </td>
-              </tr>
-
-              <tr>
-                <td>Litros carregado</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.combustivel
-                      .litrosCarregado
-                  )} L
-                </td>
-              </tr>
-
-              <tr>
-                <td>Litros vazio</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.combustivel
-                      .litrosVazio
-                  )} L
-                </td>
-              </tr>
-
-              <tr>
-                <td>Litros totais</td>
-                <td>
-                  ${formatarNumero(
-                    logistica.detalhes.combustivel
-                      .litrosTotal
-                  )} L
-                </td>
-              </tr>
-
-              <tr>
-                <td>Preço do diesel</td>
-                <td>
-                  ${formatarMoeda(
-                    logistica.detalhes.combustivel
-                      .precoDieselL
-                  )} / L
-                </td>
-              </tr>
-
-              <tr class="total">
-                <td>Custo de combustível</td>
-                <td>
-                  ${formatarMoeda(
-                    logistica.detalhes.combustivel
-                      .custoCombustivel
+                  ${formatarData(
+                    detalheLogistica
+                      .validadeCotacao
                   )}
                 </td>
+
               </tr>
+
+
+              <tr class="total">
+
+                <td>
+                  Custo da logística
+                </td>
+
+                <td>
+                  ${formatarMoeda(
+                    logistica
+                      .custoLogistica
+                  )}
+                </td>
+
+              </tr>
+
             </table>
 
-
-            <h3>4.3 Custos do Frete</h3>
-
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th class="valor">Valor</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td>Combustível</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .combustivel
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Manutenção</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .manutencao
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Motorista</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .motorista
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Alimentação do motorista</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .alimentacao
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Pedágios</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .pedagios
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Carregamento</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .carregamento
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Descarregamento</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .descarregamento
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Seguro</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .seguro
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Outros custos</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes.custos
-                        .outrosCustos
-                    )}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Custo por viagem</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.detalhes
-                        .custoPorViagem
-                    )}
-                  </td>
-                </tr>
-
-                <tr class="total">
-                  <td>Custo Total da Logística</td>
-                  <td class="valor">
-                    ${formatarMoeda(
-                      logistica.custoLogistica
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
 
             ${
-              freteProprio?.observacoes
+              detalheLogistica
+                .observacoes
                 ? `
-                  <div class="observacoes">
+
+                  <div
+                    class="observacoes"
+                  >
+
                     <strong>
                       Observações da logística
                     </strong>
@@ -1013,228 +1566,1097 @@ async function gerarRelatorioFinal(
                     <br><br>
 
                     ${escaparHtml(
-                      freteProprio.observacoes
+                      detalheLogistica
+                        .observacoes
                     )}
+
                   </div>
+
                 `
                 : ""
             }
+
           `
-    }
+          : `
 
-    <div class="quebra"></div>
+            <div
+              class="resumo-cards"
+            >
 
-    <h2>5. Montagem</h2>
+              <div class="card">
 
-    <h3>5.1 Equipamentos</h3>
+                <span>
+                  Modalidade
+                </span>
 
-    <table>
+                <strong>
+                  Frota própria
+                </strong>
+
+              </div>
+
+
+              <div class="card">
+
+                <span>
+                  Quantidade de viagens
+                </span>
+
+                <strong>
+                  ${Number(
+                    transporte
+                      .quantidadeViagens ||
+                      0
+                  )}
+                </strong>
+
+              </div>
+
+
+              <div
+                class="card destaque"
+              >
+
+                <span>
+                  Custo total
+                </span>
+
+                <strong>
+                  ${formatarMoeda(
+                    logistica
+                      .custoLogistica
+                  )}
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            <h3>
+              4.1 Frota utilizada
+            </h3>
+
+
+            <table class="dados">
+
+              <tr>
+
+                <td>
+                  Cavalo mecânico
+                </td>
+
+                <td>
+                  ${escaparHtml(
+                    transporte
+                      .cavaloMecanico ||
+                      freteProprio
+                        ?.cavalo_mecanico ||
+                      "-"
+                  )}
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Carreta
+                </td>
+
+                <td>
+                  ${escaparHtml(
+                    transporte
+                      .carreta ||
+                      freteProprio
+                        ?.carreta ||
+                      "-"
+                  )}
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Capacidade de peças
+                </td>
+
+                <td>
+                  ${
+                    freteProprio
+                      ?.capacidade_pecas ??
+                    "-"
+                  }
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Capacidade de peso
+                </td>
+
+                <td>
+                  ${
+                    freteProprio
+                      ?.capacidade_peso_kg
+                      ? `${formatarNumero(
+                          freteProprio
+                            .capacidade_peso_kg
+                        )} kg`
+                      : "-"
+                  }
+                </td>
+
+              </tr>
+
+            </table>
+
+
+            <h3>
+              4.2 Planejamento do transporte
+            </h3>
+
+
+            <table class="dados">
+
+              <tr>
+
+                <td>
+                  Quantidade de viagens
+                </td>
+
+                <td>
+                  ${Number(
+                    transporte
+                      .quantidadeViagens ||
+                      0
+                  )}
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Distância de ida
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    transporte
+                      .distanciaIdaKm
+                  )}
+                  km
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Considerar ida e volta
+                </td>
+
+                <td>
+                  ${
+                    transporte
+                      .considerarIdaVolta
+                      ? "Sim"
+                      : "Não"
+                  }
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Quilometragem carregado
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    transporte
+                      .kmCarregado
+                  )}
+                  km
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Quilometragem vazio
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    transporte
+                      .kmVazio
+                  )}
+                  km
+                </td>
+
+              </tr>
+
+
+              <tr class="total">
+
+                <td>
+                  Quilometragem total
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    transporte
+                      .kmTotal
+                  )}
+                  km
+                </td>
+
+              </tr>
+
+            </table>
+
+
+            <h3>
+              4.3 Consumo de combustível
+            </h3>
+
+
+            <table class="dados">
+
+              <tr>
+
+                <td>
+                  Consumo carregado
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    combustivel
+                      .consumoCarregadoKmL
+                  )}
+                  km/L
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Consumo vazio
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    combustivel
+                      .consumoVazioKmL
+                  )}
+                  km/L
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Litros carregado
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    combustivel
+                      .litrosCarregado
+                  )}
+                  L
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Litros vazio
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    combustivel
+                      .litrosVazio
+                  )}
+                  L
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Litros totais
+                </td>
+
+                <td>
+                  ${formatarNumero(
+                    combustivel
+                      .litrosTotal
+                  )}
+                  L
+                </td>
+
+              </tr>
+
+
+              <tr>
+
+                <td>
+                  Preço do diesel
+                </td>
+
+                <td>
+                  ${formatarMoeda(
+                    combustivel
+                      .precoDieselL
+                  )}
+                  / L
+                </td>
+
+              </tr>
+
+
+              <tr class="total">
+
+                <td>
+                  Custo de combustível
+                </td>
+
+                <td>
+                  ${formatarMoeda(
+                    combustivel
+                      .custoCombustivel
+                  )}
+                </td>
+
+              </tr>
+
+            </table>
+
+
+            <h3>
+              4.4 Composição dos custos da logística
+            </h3>
+
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Item
+                  </th>
+
+                  <th class="valor">
+                    Valor
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                <tr>
+
+                  <td>
+                    Combustível
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .combustivel
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Manutenção
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .manutencao
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Motorista
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .motorista
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Alimentação do motorista
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .alimentacao
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Pedágios
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .pedagios
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Carregamento
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .carregamento
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Descarregamento
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .descarregamento
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Seguro
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .seguro
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Outros custos
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      custosLogistica
+                        .outrosCustos
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr>
+
+                  <td>
+                    Custo por viagem
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      detalheLogistica
+                        .custoPorViagem
+                    )}
+                  </td>
+
+                </tr>
+
+
+                <tr class="total">
+
+                  <td>
+                    Custo Total da Logística
+                  </td>
+
+                  <td class="valor">
+                    ${formatarMoeda(
+                      logistica
+                        .custoLogistica
+                    )}
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+
+            ${
+              freteProprio
+                ?.observacoes
+                ? `
+
+                  <div
+                    class="observacoes"
+                  >
+
+                    <strong>
+                      Observações da logística
+                    </strong>
+
+                    <br><br>
+
+                    ${escaparHtml(
+                      freteProprio
+                        .observacoes
+                    )}
+
+                  </div>
+
+                `
+                : ""
+            }
+
+          `
+      }
+
+
+      <div class="quebra">
+      </div>
+
+
+      <!-- MONTAGEM -->
+
+      <h2>
+        5. Montagem
+      </h2>
+
+
+      <div
+        class="resumo-cards"
+      >
+
+        <div class="card">
+
+          <span>
+            Equipamentos
+          </span>
+
+          <strong>
+            ${Number(
+              montagem
+                .equipamentos
+                ?.quantidade ||
+                0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="card">
+
+          <span>
+            Equipes
+          </span>
+
+          <strong>
+            ${Number(
+              montagem
+                .equipes
+                ?.quantidade ||
+                0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div
+          class="card destaque"
+        >
+
+          <span>
+            Custo total da montagem
+          </span>
+
+          <strong>
+            ${formatarMoeda(
+              montagem
+                .custoTotalMontagem
+            )}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <h3>
+        5.1 Equipamentos utilizados
+      </h3>
+
+
+      <table>
+
         <thead>
-        <tr>
-            <th>Equipamento</th>
-            <th>Qtde.</th>
-            <th>Cobrança</th>
-            <th>Tempo</th>
-            <th>Valor Unit.</th>
-            <th>Total</th>
-        </tr>
+
+          <tr>
+
+            <th>
+              Equipamento
+            </th>
+
+            <th>
+              Qtde.
+            </th>
+
+            <th>
+              Cobrança
+            </th>
+
+            <th>
+              Tempo
+            </th>
+
+            <th>
+              Valor Unit.
+            </th>
+
+            <th>
+              Total
+            </th>
+
+          </tr>
+
         </thead>
 
-        <tbody>
-        ${linhasEquipamentos}
 
-        <tr class="total">
+        <tbody>
+
+          ${linhasEquipamentos}
+
+          <tr class="total">
+
             <td colspan="5">
-            Total de Equipamentos
+              Total de Equipamentos
             </td>
 
             <td class="valor">
-            ${formatarMoeda(
-                montagem.equipamentos.custoTotal
-            )}
+              ${formatarMoeda(
+                montagem
+                  .equipamentos
+                  ?.custoTotal
+              )}
             </td>
-        </tr>
+
+          </tr>
+
         </tbody>
-    </table>
 
-    <h3>5.2 Equipe</h3>
+      </table>
 
-    <table>
+
+      <h3>
+        5.2 Equipe de montagem
+      </h3>
+
+
+      <table>
+
         <thead>
-        <tr>
-            <th>Função</th>
-            <th>Trabalhadores</th>
-            <th>Dias</th>
-            <th>Custo Diário</th>
-            <th>Total</th>
-        </tr>
+
+          <tr>
+
+            <th>
+              Função / Equipe
+            </th>
+
+            <th>
+              Trabalhadores
+            </th>
+
+            <th>
+              Dias
+            </th>
+
+            <th>
+              Custo Diário
+            </th>
+
+            <th>
+              Total
+            </th>
+
+          </tr>
+
         </thead>
 
-        <tbody>
-        ${linhasEquipes}
 
-        <tr class="total">
+        <tbody>
+
+          ${linhasEquipes}
+
+          <tr class="total">
+
             <td colspan="4">
-            Total da Equipe
+              Total da Equipe
             </td>
 
             <td class="valor">
-            ${formatarMoeda(
-                montagem.equipes.custoTotal
-            )}
+              ${formatarMoeda(
+                montagem
+                  .equipes
+                  ?.custoTotal
+              )}
             </td>
-        </tr>
+
+          </tr>
+
         </tbody>
-    </table>
 
-    <h3>5.3 Custos Gerais</h3>
+      </table>
 
-    <table class="dados">
-        <tr>
-        <td>Hospedagem</td>
-        <td>
-            ${formatarMoeda(
-            montagem.custosGerais.hospedagem
-            )}
-        </td>
-        </tr>
+
+      <h3>
+        5.3 Custos gerais
+      </h3>
+
+
+      <table class="dados">
 
         <tr>
-        <td>Alimentação</td>
-        <td>
+
+          <td>
+            Hospedagem
+          </td>
+
+          <td>
             ${formatarMoeda(
-            montagem.custosGerais.alimentacao
+              montagem
+                .custosGerais
+                ?.hospedagem
             )}
-        </td>
+          </td>
+
         </tr>
 
-        <tr>
-        <td>Transporte da equipe</td>
-        <td>
-            ${formatarMoeda(
-            montagem.custosGerais
-                .transporteEquipe
-            )}
-        </td>
-        </tr>
 
         <tr>
-        <td>Outros custos</td>
-        <td>
+
+          <td>
+            Alimentação
+          </td>
+
+          <td>
             ${formatarMoeda(
-            montagem.custosGerais.outrosCustos
+              montagem
+                .custosGerais
+                ?.alimentacao
             )}
-        </td>
+          </td>
+
         </tr>
+
+
+        <tr>
+
+          <td>
+            Transporte da equipe
+          </td>
+
+          <td>
+            ${formatarMoeda(
+              montagem
+                .custosGerais
+                ?.transporteEquipe
+            )}
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td>
+            Outros custos
+          </td>
+
+          <td>
+            ${formatarMoeda(
+              montagem
+                .custosGerais
+                ?.outrosCustos
+            )}
+          </td>
+
+        </tr>
+
 
         <tr class="total">
-        <td>Custo Total da Montagem</td>
-        <td>
+
+          <td>
+            Custo Total da Montagem
+          </td>
+
+          <td>
             ${formatarMoeda(
-            montagem.custoTotalMontagem
+              montagem
+                .custoTotalMontagem
             )}
-        </td>
+          </td>
+
         </tr>
-    </table>
 
-    <div class="quebra"></div>
+      </table>
 
-    <h2>6. Resumo Financeiro</h2>
 
-    <table>
+      <div class="quebra">
+      </div>
+
+
+      <!-- RESUMO -->
+
+      <h2>
+        6. Resumo Financeiro
+      </h2>
+
+
+      <table>
+
         <thead>
-        <tr>
-            <th>Etapa</th>
-            <th class="valor">Valor</th>
-        </tr>
+
+          <tr>
+
+            <th>
+              Etapa
+            </th>
+
+            <th class="valor">
+              Valor
+            </th>
+
+          </tr>
+
         </thead>
 
+
         <tbody>
-        <tr>
-            <td>Fabricação</td>
-            <td class="valor">
-            ${formatarMoeda(
-                resumo.custos.fabricacao
-            )}
-            </td>
-        </tr>
 
-        <tr>
-            <td>Logística</td>
-            <td class="valor">
-            ${formatarMoeda(
-                resumo.custos.logistica
-            )}
-            </td>
-        </tr>
+          <tr>
 
-        <tr>
-            <td>Montagem</td>
-            <td class="valor">
-            ${formatarMoeda(
-                resumo.custos.montagem
-            )}
-            </td>
-        </tr>
-
-        <tr class="total">
-            <td>Custo Direto</td>
-            <td class="valor">
-            ${formatarMoeda(
-                resumo.custos.custoDireto
-            )}
-            </td>
-        </tr>
-
-        <tr>
             <td>
-            BDI (${formatarNumero(
-                resumo.bdi.percentual
-            )}%)
+              Fabricação
             </td>
 
             <td class="valor">
-            ${formatarMoeda(
-                resumo.bdi.valor
-            )}
+              ${formatarMoeda(
+                resumo
+                  .custos
+                  .fabricacao
+              )}
             </td>
-        </tr>
-        </tbody>
-    </table>
 
-    <div class="valor-final">
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Logística
+            </td>
+
+            <td class="valor">
+              ${formatarMoeda(
+                resumo
+                  .custos
+                  .logistica
+              )}
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              Montagem
+            </td>
+
+            <td class="valor">
+              ${formatarMoeda(
+                resumo
+                  .custos
+                  .montagem
+              )}
+            </td>
+
+          </tr>
+
+
+          <tr class="total">
+
+            <td>
+              Custo Direto
+            </td>
+
+            <td class="valor">
+              ${formatarMoeda(
+                resumo
+                  .custos
+                  .custoDireto
+              )}
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <td>
+              BDI
+              (${formatarNumero(
+                resumo
+                  .bdi
+                  .percentual
+              )}%)
+            </td>
+
+            <td class="valor">
+              ${formatarMoeda(
+                resumo
+                  .bdi
+                  .valor
+              )}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+
+      <div class="valor-final">
+
         <span>
-        VALOR FINAL DO PROJETO
+          VALOR FINAL DO PROJETO
         </span>
 
         <strong>
-        ${formatarMoeda(
+          ${formatarMoeda(
             resumo.valorFinal
-        )}
+          )}
         </strong>
-    </div>
 
-    <div class="assinaturas">
+      </div>
+
+
+      <div class="assinaturas">
 
         <div class="assinatura">
-            Responsável pelo orçamento
+          Responsável pelo orçamento
         </div>
 
         <div class="assinatura">
-            Cliente / Responsável
+          Cliente / Responsável
         </div>
 
-    </div>
+      </div>
 
-    <div class="rodape">
-        Relatório gerado pelo sistema Estrutec.
-    </div>
+
+      <div class="rodape-corpo">
+
+        Relatório gerado pelo
+        sistema Estrutec.
+
+        Os valores apresentados
+        correspondem aos dados
+        registrados neste projeto.
+
+      </div>
 
     </body>
 
     </html>
-    `;
+  `;
 
+
+  /*
+    GERAÇÃO DO PDF
+  */
   const navegador =
     await puppeteer.launch({
       headless: true,
@@ -1247,84 +2669,150 @@ async function gerarRelatorioFinal(
     await pagina.setContent(
       html,
       {
-        waitUntil: "networkidle0",
+        waitUntil:
+          "networkidle0",
       }
     );
 
-    const pdf = await pagina.pdf({
-    format: "A4",
+    const pdf =
+      await pagina.pdf({
+        format: "A4",
 
-    printBackground: true,
+        printBackground:
+          true,
 
-    displayHeaderFooter: true,
+        displayHeaderFooter:
+          true,
 
-    headerTemplate: `
-    <div style="
-        width: 100%;
-        padding: 6px 18mm 0 18mm;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-family: Arial, sans-serif;
-    ">
 
-        <img
-        src="data:image/png;base64,${logoBase64}"
-        style="
-            max-width: 120px;
-            max-height: 55px;
-            object-fit: contain;
-        "
-        />
+        /*
+          CABEÇALHO DE TODAS
+          AS PÁGINAS
+        */
+        headerTemplate: `
+          <div
+            style="
+              width: 100%;
+              padding:
+                5px 18mm 0 18mm;
 
-        <div style="
-        font-size: 8px;
-        color: #777;
-        text-align: right;
-        ">
-        Estrutec — ${escaparHtml(projeto.codigo)}
-        </div>
+              display: flex;
+              align-items: center;
 
-    </div>
-    `,
+              justify-content:
+                space-between;
 
-    footerTemplate: `
-        <div style="
-        width: 100%;
-        font-size: 8px;
-        padding: 0 18mm;
-        color: #777;
-        display: flex;
-        justify-content: space-between;
-        ">
+              font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            "
+          >
 
-        <span>
-            Sistema Estrutec
-        </span>
+            ${
+              logoBase64
+                ? `
+                  <img
+                    src="data:image/png;base64,${logoBase64}"
+                    style="
+                      max-width: 105px;
+                      max-height: 45px;
+                      object-fit: contain;
+                    "
+                  />
+                `
+                : `
+                  <strong
+                    style="
+                      font-size: 12px;
+                      color: #171717;
+                    "
+                  >
+                    ESTRUTEC
+                  </strong>
+                `
+            }
 
-        <span>
-            Página
-            <span class="pageNumber"></span>
-            de
-            <span class="totalPages"></span>
-        </span>
+            <div
+              style="
+                font-size: 8px;
+                color: #78716C;
+                text-align: right;
+              "
+            >
+              Relatório Final —
+              ${escaparHtml(
+                projeto.codigo
+              )}
+            </div>
 
-        </div>
-    `,
+          </div>
+        `,
 
-    margin: {
-        top: "25mm",
-        right: "18mm",
-        bottom: "25mm",
-        left: "18mm",
-    },
-    });
+
+        /*
+          RODAPÉ COM PAGINAÇÃO
+        */
+        footerTemplate: `
+          <div
+            style="
+              width: 100%;
+
+              padding:
+                0 18mm;
+
+              display: flex;
+
+              justify-content:
+                space-between;
+
+              font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+              font-size: 8px;
+
+              color:
+                #78716C;
+            "
+          >
+
+            <span>
+              Sistema Estrutec
+            </span>
+
+            <span>
+              Página
+
+              <span
+                class="pageNumber"
+              ></span>
+
+              de
+
+              <span
+                class="totalPages"
+              ></span>
+            </span>
+
+          </div>
+        `,
+
+        margin: {
+          top: "24mm",
+          right: "15mm",
+          bottom: "22mm",
+          left: "15mm",
+        },
+      });
 
     return Buffer.from(pdf);
   } finally {
     await navegador.close();
   }
 }
+
 
 module.exports = {
   gerarRelatorioFinal,
