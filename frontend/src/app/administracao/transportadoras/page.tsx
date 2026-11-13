@@ -1508,4 +1508,38 @@ const estilos = {
     fontWeight: 700,
     cursor: "pointer",
     },
+    botaoAtivar: {
+    border: "1px solid #16A34A",
+    background: "#F0FDF4",
+    color: "#15803D",
+    borderRadius: "6px",
+    padding: "7px 12px",
+    fontSize: "12px",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+
+  botaoDesativar: {
+    border: "1px solid #DC2626",
+    background: "#FEF2F2",
+    color: "#B91C1C",
+    borderRadius: "6px",
+    padding: "7px 12px",
+    fontSize: "12px",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+
+  textarea: {
+    width: "100%",
+    minHeight: "90px",
+    border: "1px solid #D6D3D1",
+    borderRadius: "6px",
+    padding: "10px 12px",
+    fontSize: "13px",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    resize: "vertical" as const,
+    outline: "none",
+    boxSizing: "border-box" as const,
+  },
 };

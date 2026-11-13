@@ -25,6 +25,15 @@ type ClienteEmpresa = {
   nome_fantasia: string | null;
 };
 
+type UsuarioLogado = {
+  id: number;
+  nome: string;
+  email: string;
+  perfil:
+    | "ADMINISTRADOR"
+    | "OPERADOR";
+};
+
 export default function PainelPage() {
   const router = useRouter();
   const [projetos, setProjetos] = useState<Projeto[]>([]);

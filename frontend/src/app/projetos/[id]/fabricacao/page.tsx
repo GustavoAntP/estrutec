@@ -1228,6 +1228,15 @@ const estilos = {
         "repeat(auto-fit, minmax(180px, 1fr))",
     gap: "12px",
     },
+    indicador: {
+      background: "#f9fafb",
+      border: "1px solid #e5e7eb",
+      borderRadius: "7px",
+      padding: "15px",
+      display: "flex",
+      flexDirection: "column" as const,
+      gap: "6px",
+    },
 
     subtituloTabela: {
     margin: "28px 0 12px",
