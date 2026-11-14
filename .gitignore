@@ -15,3 +15,6 @@ out/
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+# Cobertura de testes
+backend/coverage/

@@ -93,6 +93,7 @@ async function calcularVolumes(
         volumeTotal;
 
       volumeCalculado += volumeTotal;
+      totalPecas += quantidade;
 
       return {
         id: elemento.id,
