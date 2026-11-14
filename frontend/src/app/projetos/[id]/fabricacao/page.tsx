@@ -1,8 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiAutenticada } from "@/servicos/api";
+import { tema } from "@/estilos/tema";
+
 
 type MaterialCalculado = {
   quantidade: number;
@@ -615,18 +618,37 @@ async function carregarElementos() {
 
   return (
     <main style={estilos.pagina}>
-      <header style={estilos.cabecalho}>
-        <div>
-          <h1 style={estilos.logo}>
-            ESTRUTEC
-          </h1>
+    <header style={estilos.cabecalho}>
+      <div style={estilos.cabecalhoConteudo}>
+        <div style={estilos.identidade}>
+          <Image
+            src="/estrutec-logo.png"
+            alt="Estrutec"
+            width={150}
+            height={70}
+            priority
+            style={estilos.logo}
+          />
 
-          <p style={estilos.subtitulo}>
-            Fabricação
-          </p>
+          <div style={estilos.divisor} />
+
+          <div>
+            <span
+              style={estilos.rotuloCabecalho}
+            >
+              Projetos
+            </span>
+
+            <strong
+              style={estilos.tituloCabecalho}
+            >
+              Fabricação
+            </strong>
+          </div>
         </div>
 
         <button
+          type="button"
           style={estilos.botaoVoltar}
           onClick={() =>
             router.push(
@@ -634,11 +656,28 @@ async function carregarElementos() {
             )
           }
         >
-          ← Voltar ao projeto
+          Voltar ao projeto
         </button>
-      </header>
+      </div>
+    </header>
 
       <section style={estilos.conteudo}>
+      <div style={estilos.topoPagina}>
+        <span style={estilos.sobretitulo}>
+          FABRICAÇÃO
+        </span>
+
+        <h1 style={estilos.tituloPagina}>
+          Custos de fabricação
+        </h1>
+
+        <p style={estilos.descricaoPagina}>
+          Configure os parâmetros técnicos,
+          informe os preços dos materiais e
+          calcule os custos de fabricação do
+          projeto.
+        </p>
+      </div>
         <div style={estilos.card}>
           <div style={estilos.tituloArea}>
             <h2 style={estilos.titulo}>
@@ -1048,59 +1087,234 @@ function CampoNumero({
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif",
+
+    background:
+      tema.cores.fundo,
+
+    color:
+      tema.cores.grafite,
+
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   centralizado: {
     minHeight: "100vh",
+
     display: "flex",
+
     alignItems: "center",
+
     justifyContent: "center",
-    fontFamily: "Arial, sans-serif",
+
+    background:
+      tema.cores.fundo,
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   cabecalho: {
-    minHeight: "80px",
-    background: "#ffffff",
+    background:
+      tema.cores.branco,
+
     borderBottom:
-      "1px solid #e5e7eb",
-    padding: "16px 40px",
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  cabecalhoConteudo: {
+    maxWidth: "1600px",
+
+    margin: "0 auto",
+
+    padding: "14px 24px",
+
     display: "flex",
+
     alignItems: "center",
-    justifyContent: "space-between",
+
+    justifyContent:
+      "space-between",
+
+    gap: "20px",
+  },
+
+  identidade: {
+    display: "flex",
+
+    alignItems: "center",
+
+    gap: "18px",
   },
 
   logo: {
-    margin: 0,
-    fontSize: "24px",
+    width: "125px",
+
+    height: "auto",
+
+    objectFit:
+      "contain" as const,
   },
 
-  subtitulo: {
-    margin: "4px 0 0",
-    color: "#6b7280",
-    fontSize: "13px",
+  divisor: {
+    width: "1px",
+
+    height: "38px",
+
+    background:
+      tema.cores.borda,
+  },
+
+  rotuloCabecalho: {
+    display: "block",
+
+    marginBottom: "3px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+
+    fontWeight: 700,
+
+    letterSpacing: "1px",
+
+    textTransform:
+      "uppercase" as const,
+  },
+
+  tituloCabecalho: {
+    display: "block",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "15px",
   },
 
   botaoVoltar: {
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "10px 15px",
+    height: "40px",
+
+    padding: "0 16px",
+
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 600,
+
     cursor: "pointer",
   },
 
   conteudo: {
-    maxWidth: "1100px",
+    width: "100%",
+
+    maxWidth: "1250px",
+
     margin: "0 auto",
-    padding: "35px 40px",
+
+    padding:
+      "42px 24px 60px",
+  },
+
+  topoPagina: {
+    marginBottom: "28px",
+  },
+
+  sobretitulo: {
+    display: "block",
+
+    marginBottom: "8px",
+
+    color:
+      tema.cores.laranja,
+
+    fontSize: "11px",
+
+    fontWeight: 800,
+
+    letterSpacing: "1.4px",
+  },
+
+  tituloPagina: {
+    margin: 0,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "30px",
+
+    fontWeight: 750,
+  },
+
+  descricaoPagina: {
+    maxWidth: "760px",
+
+    margin: "8px 0 0",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "14px",
+
+    lineHeight: 1.55,
   },
 
   card: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    overflow: "hidden",
+
+    background:
+      tema.cores.branco,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+
+    borderRadius:
+      tema.bordas.grande,
+
+    padding: "26px",
+
+    boxShadow:
+      tema.sombras.card,
+  },
+
+  cardSecundario: {
+    marginTop: "24px",
+
+    overflow: "hidden",
+
+    background:
+      tema.cores.branco,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+
+    borderRadius:
+      tema.bordas.grande,
+
+    padding: "26px",
+
+    boxShadow:
+      tema.sombras.card,
   },
 
   tituloArea: {
@@ -1109,261 +1323,530 @@ const estilos = {
 
   titulo: {
     margin: 0,
-    fontSize: "22px",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "19px",
+
+    fontWeight: 700,
   },
 
   descricao: {
     margin: "7px 0 0",
-    color: "#6b7280",
-    fontSize: "14px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "13px",
+
+    lineHeight: 1.5,
   },
 
   formulario: {
     display: "flex",
-    flexDirection: "column" as const,
+
+    flexDirection:
+      "column" as const,
+
     gap: "22px",
   },
 
   grid: {
     display: "grid",
+
     gridTemplateColumns:
       "repeat(auto-fit, minmax(220px, 1fr))",
+
     gap: "18px",
   },
 
   campo: {
     display: "flex",
-    flexDirection: "column" as const,
+
+    flexDirection:
+      "column" as const,
+
     gap: "7px",
-    fontSize: "13px",
-    fontWeight: 600,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "12px",
+
+    fontWeight: 700,
   },
 
   input: {
-    height: "43px",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "0 11px",
-    fontSize: "14px",
+    width: "100%",
+
+    height: "44px",
+
+    boxSizing:
+      "border-box" as const,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    padding: "0 12px",
+
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "13px",
+
+    outline: "none",
   },
 
   aviso: {
-    padding: "12px",
-    borderRadius: "6px",
-    background: "#fef3c7",
-    color: "#92400e",
-    fontSize: "13px",
+    padding: "12px 14px",
+
+    background: "#FFF7ED",
+
+    color: "#9A3412",
+
+    border:
+      "1px solid #FED7AA",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
+
     lineHeight: 1.5,
   },
 
   erro: {
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "11px",
-    borderRadius: "6px",
-    fontSize: "13px",
+    padding: "12px 14px",
+
+    background:
+      tema.cores.erroFundo,
+
+    color:
+      tema.cores.erro,
+
+    border:
+      "1px solid #FECACA",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
   },
 
   sucesso: {
-    background: "#dcfce7",
-    color: "#166534",
-    padding: "11px",
-    borderRadius: "6px",
-    fontSize: "13px",
+    padding: "12px 14px",
+
+    background: "#F0FDF4",
+
+    color: "#15803D",
+
+    border:
+      "1px solid #BBF7D0",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
   },
 
   acoes: {
     display: "flex",
-    justifyContent: "flex-end",
+
+    justifyContent:
+      "flex-end",
+
+    paddingTop: "20px",
+
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
   },
 
   botaoSalvar: {
-    background: "#111827",
-    color: "#ffffff",
+    height: "44px",
+
+    padding: "0 20px",
+
+    minWidth: "150px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 700,
+
     cursor: "pointer",
   },
-  cardSecundario: {
-    marginTop: "20px",
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
-  },
+
   cabecalhoCalculo: {
     display: "flex",
-    justifyContent: "space-between",
+
+    justifyContent:
+      "space-between",
+
     alignItems: "center",
+
     gap: "20px",
-    },
+  },
 
-    botaoCalcular: {
-    background: "#111827",
-    color: "#ffffff",
+  botaoCalcular: {
+    height: "44px",
+
+    padding: "0 20px",
+
+    minWidth: "170px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
-    cursor: "pointer",
-    whiteSpace: "nowrap" as const,
-    },
 
-    erroCalculo: {
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 700,
+
+    cursor: "pointer",
+
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  erroCalculo: {
     marginTop: "20px",
+
     padding: "14px",
-    background: "#fff7ed",
-    color: "#9a3412",
-    border: "1px solid #fed7aa",
-    borderRadius: "7px",
-    fontSize: "13px",
-    },
 
-    resumoCalculo: {
+    background: "#FFF7ED",
+
+    color: "#9A3412",
+
+    border:
+      "1px solid #FED7AA",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
+  },
+
+  resumoCalculo: {
     marginTop: "25px",
+
     display: "grid",
+
     gridTemplateColumns:
-        "repeat(auto-fit, minmax(180px, 1fr))",
+      "repeat(auto-fit, minmax(180px, 1fr))",
+
     gap: "12px",
-    },
-    indicador: {
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-      borderRadius: "7px",
-      padding: "15px",
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "6px",
-    },
+  },
 
-    subtituloTabela: {
-    margin: "28px 0 12px",
-    fontSize: "16px",
-    },
+  indicador: {
+    minHeight: "82px",
 
-    tabelaContainer: {
-    width: "100%",
-    overflowX: "auto" as const,
-    border: "1px solid #e5e7eb",
-    borderRadius: "8px",
-    },
-
-    tabela: {
-    width: "100%",
-    borderCollapse: "collapse" as const,
-    },
-
-    th: {
-    background: "#f9fafb",
-    textAlign: "left" as const,
-    padding: "12px",
-    fontSize: "12px",
-    color: "#4b5563",
-    borderBottom: "1px solid #e5e7eb",
-    },
-
-    td: {
-    padding: "12px",
-    borderBottom: "1px solid #f0f0f0",
-    fontSize: "13px",
-    },
-
-    totalFabricacao: {
-    marginTop: "20px",
-    padding: "18px",
-    border: "2px solid #111827",
-    borderRadius: "8px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    fontSize: "14px",
-    },
-    listaAreas: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "12px",
-    },
-
-    linhaArea: {
-    border: "1px solid #e5e7eb",
-    borderRadius: "7px",
     padding: "15px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "20px",
-    },
 
-    detalheArea: {
-    marginTop: "5px",
-    color: "#6b7280",
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    justifyContent:
+      "space-between",
+
+    gap: "6px",
+
+    background: "#FAFAF9",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  subtituloTabela: {
+    margin: "28px 0 12px",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "16px",
+  },
+
+  tabelaContainer: {
+    width: "100%",
+
+    overflowX:
+      "auto" as const,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  tabela: {
+    width: "100%",
+
+    borderCollapse:
+      "collapse" as const,
+  },
+
+  th: {
+    padding: "12px 14px",
+
+    background: "#FAFAF9",
+
+    color:
+      tema.cores.textoSecundario,
+
+    textAlign:
+      "left" as const,
+
+    fontSize: "11px",
+
+    fontWeight: 700,
+
+    textTransform:
+      "uppercase" as const,
+
+    letterSpacing: "0.35px",
+
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  td: {
+    padding: "12px 14px",
+
+    color:
+      tema.cores.grafite,
+
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+
     fontSize: "12px",
-    },
+  },
 
-    campoArea: {
+  totalFabricacao: {
+    marginTop: "22px",
+
+    padding: "18px",
+
     display: "flex",
+
+    justifyContent:
+      "space-between",
+
+    alignItems: "center",
+
+    gap: "20px",
+
+    background: "#FFF7ED",
+
+    border:
+      `2px solid ${tema.cores.laranja}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "14px",
+  },
+
+  listaAreas: {
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    gap: "12px",
+  },
+
+  linhaArea: {
+    padding: "15px",
+
+    display: "flex",
+
+    justifyContent:
+      "space-between",
+
+    alignItems: "center",
+
+    gap: "20px",
+
+    background: "#FAFAF9",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  detalheArea: {
+    marginTop: "5px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "12px",
+  },
+
+  campoArea: {
+    display: "flex",
+
     gap: "8px",
-    alignItems: "center",
-    },
 
-    inputArea: {
+    alignItems: "center",
+  },
+
+  inputArea: {
     width: "130px",
+
     height: "40px",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
     padding: "0 10px",
-    },
 
-    botaoSalvarArea: {
+    outline: "none",
+  },
+
+  botaoSalvarArea: {
     height: "40px",
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
+
     padding: "0 14px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    border: "none",
+
+    borderRadius:
+      tema.bordas.pequena,
+
     cursor: "pointer",
-    fontWeight: 600,
-    },
-    confirmacaoFabricacao: {
-    marginTop: "20px",
-    paddingTop: "20px",
-    borderTop: "1px solid #e5e7eb",
+
+    fontWeight: 700,
+  },
+
+  confirmacaoFabricacao: {
+    marginTop: "24px",
+
+    paddingTop: "22px",
+
     display: "flex",
+
     alignItems: "center",
-    justifyContent: "flex-end",
+
+    justifyContent:
+      "flex-end",
+
     gap: "15px",
-    },
 
-    botaoConfirmar: {
-    background: "#111827",
-    color: "#ffffff",
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  botaoConfirmar: {
+    height: "44px",
+
+    padding: "0 20px",
+
+    minWidth: "180px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
-    cursor: "pointer",
-    },
 
-    sucessoConfirmacao: {
-    marginRight: "auto",
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
-    borderRadius: "6px",
-    padding: "11px 14px",
+    borderRadius:
+      tema.bordas.pequena,
+
     fontSize: "13px",
-    fontWeight: 600,
-    },
 
-    botaoContinuar: {
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+    fontWeight: 700,
+
     cursor: "pointer",
-    },
+  },
+
+  sucessoConfirmacao: {
+    marginRight: "auto",
+
+    padding: "11px 14px",
+
+    background: "#F0FDF4",
+
+    color: "#15803D",
+
+    border:
+      "1px solid #BBF7D0",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
+
+    fontWeight: 600,
+  },
+
+  botaoContinuar: {
+    height: "44px",
+
+    padding: "0 20px",
+
+    minWidth: "205px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    border: "none",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 700,
+
+    cursor: "pointer",
+  },
 };

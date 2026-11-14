@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
-
-import {
-  apiAutenticada,
-} from "@/servicos/api";
+import Image from "next/image";
+import {useEffect, useState,} from "react";
+import {useParams, useRouter,} from "next/navigation";
+import {apiAutenticada,} from "@/servicos/api";
+import { tema } from "@/estilos/tema";
 
 type ResumoFinanceiro = {
   projeto: {
@@ -234,30 +226,64 @@ export default function ResumoPage() {
   return (
     <main style={estilos.pagina}>
       <header style={estilos.cabecalho}>
-        <div>
-          <h1 style={estilos.logo}>
-            ESTRUTEC
-          </h1>
+        <div style={estilos.cabecalhoConteudo}>
+          <div style={estilos.identidade}>
+            <Image
+              src="/estrutec-logo.png"
+              alt="Estrutec"
+              width={150}
+              height={70}
+              priority
+              style={estilos.logo}
+            />
 
-          <p style={estilos.subtitulo}>
-            Resumo Financeiro
-          </p>
+            <div style={estilos.divisor} />
+
+            <div>
+              <span
+                style={estilos.rotuloCabecalho}
+              >
+                Projetos
+              </span>
+
+              <strong
+                style={estilos.tituloCabecalho}
+              >
+                Resumo Financeiro
+              </strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                `/projetos/${id}`
+              )
+            }
+            style={estilos.botaoVoltar}
+          >
+            Voltar ao projeto
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            router.push(
-              `/projetos/${id}`
-            )
-          }
-          style={estilos.botaoVoltar}
-        >
-          ← Voltar ao projeto
-        </button>
       </header>
 
       <section style={estilos.conteudo}>
+        <div style={estilos.topoPagina}>
+          <span style={estilos.sobretitulo}>
+            RESUMO FINANCEIRO
+          </span>
+
+          <h1 style={estilos.tituloPagina}>
+            Visão financeira do projeto
+          </h1>
+
+          <p style={estilos.descricaoPagina}>
+            Confira a composição dos custos,
+            o BDI aplicado e o valor final do
+            orçamento antes de finalizar o projeto.
+          </p>
+        </div>
         <div style={estilos.cardProjeto}>
           <div>
             <span style={estilos.rotulo}>
@@ -526,8 +552,10 @@ export default function ResumoPage() {
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif",
+    background: tema.cores.fundo,
+    color: tema.cores.grafite,
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   centralizado: {
@@ -535,379 +563,544 @@ const estilos = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    fontFamily: "Arial, sans-serif",
+    background: tema.cores.fundo,
+    color:
+      tema.cores.textoSecundario,
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   cabecalho: {
-    minHeight: "80px",
-    background: "#ffffff",
+    background:
+      tema.cores.branco,
     borderBottom:
-      "1px solid #e5e7eb",
-    padding: "16px 40px",
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  cabecalhoConteudo: {
+    maxWidth: "1600px",
+    margin: "0 auto",
+    padding: "14px 24px",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
+    gap: "20px",
+  },
+
+  identidade: {
+    display: "flex",
+    alignItems: "center",
+    gap: "18px",
   },
 
   logo: {
-    margin: 0,
-    fontSize: "24px",
+    width: "125px",
+    height: "auto",
+    objectFit:
+      "contain" as const,
   },
 
-  subtitulo: {
-    margin: "4px 0 0",
-    color: "#6b7280",
-    fontSize: "13px",
+  divisor: {
+    width: "1px",
+    height: "38px",
+    background:
+      tema.cores.borda,
+  },
+
+  rotuloCabecalho: {
+    display: "block",
+    marginBottom: "3px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "11px",
+    fontWeight: 700,
+    letterSpacing: "1px",
+    textTransform:
+      "uppercase" as const,
+  },
+
+  tituloCabecalho: {
+    display: "block",
+    color:
+      tema.cores.grafite,
+    fontSize: "15px",
   },
 
   botaoVoltar: {
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "10px 15px",
+    height: "40px",
+    padding: "0 16px",
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "13px",
+    fontWeight: 600,
     cursor: "pointer",
   },
 
   conteudo: {
-    maxWidth: "1100px",
+    maxWidth: "1180px",
     margin: "0 auto",
-    padding: "35px 40px",
+    padding:
+      "42px 24px 60px",
+  },
+
+  topoPagina: {
+    marginBottom: "28px",
+  },
+
+  sobretitulo: {
+    display: "block",
+    marginBottom: "8px",
+    color:
+      tema.cores.laranja,
+    fontSize: "11px",
+    fontWeight: 800,
+    letterSpacing: "1.4px",
+  },
+
+  tituloPagina: {
+    margin: 0,
+    color:
+      tema.cores.grafite,
+    fontSize: "30px",
+    fontWeight: 750,
+  },
+
+  descricaoPagina: {
+    maxWidth: "700px",
+    margin: "8px 0 0",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "14px",
+    lineHeight: 1.55,
   },
 
   cardProjeto: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "25px 30px",
+    background:
+      tema.cores.branco,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderLeft:
+      `4px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "22px 26px",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
     gap: "20px",
-    marginBottom: "20px",
+    marginBottom: "24px",
+    boxShadow:
+      tema.sombras.card,
   },
 
   rotulo: {
-    fontSize: "12px",
-    color: "#6b7280",
+    fontSize: "10px",
+    color:
+      tema.cores.laranja,
+    fontWeight: 800,
+    letterSpacing: "1px",
     textTransform:
       "uppercase" as const,
   },
 
   nomeProjeto: {
-    margin: "5px 0",
-    fontSize: "21px",
+    margin: "6px 0",
+    color:
+      tema.cores.grafite,
+    fontSize: "20px",
   },
 
   cliente: {
     margin: 0,
-    color: "#6b7280",
-    fontSize: "13px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "12px",
   },
 
   status: {
-    background: "#f3f4f6",
-    border: "1px solid #d1d5db",
+    background: "#FFF7ED",
+    color: "#9A3412",
+    border:
+      "1px solid #FED7AA",
     borderRadius: "20px",
-    padding: "8px 14px",
-    fontSize: "12px",
-    fontWeight: 600,
-    whiteSpace: "nowrap" as const,
+    padding: "7px 12px",
+    fontSize: "11px",
+    fontWeight: 700,
+    whiteSpace:
+      "nowrap" as const,
   },
 
   card: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    background:
+      tema.cores.branco,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "26px",
+    boxShadow:
+      tema.sombras.card,
   },
 
   cardSecundario: {
-    marginTop: "20px",
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    marginTop: "24px",
+    background:
+      tema.cores.branco,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "26px",
+    boxShadow:
+      tema.sombras.card,
   },
 
   titulo: {
     margin: 0,
-    fontSize: "21px",
+    color:
+      tema.cores.grafite,
+    fontSize: "19px",
+    fontWeight: 700,
   },
 
   descricao: {
     margin: "7px 0 22px",
-    color: "#6b7280",
-    fontSize: "14px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "13px",
+    lineHeight: 1.5,
   },
 
   gridCustos: {
     display: "grid",
     gridTemplateColumns:
       "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "15px",
+    gap: "14px",
   },
 
   indicador: {
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
-    borderRadius: "8px",
-    padding: "18px",
+    minHeight: "92px",
+    background: "#FAFAF9",
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "17px",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection:
+      "column" as const,
+    justifyContent:
+      "space-between",
     gap: "8px",
   },
 
   custoDireto: {
     marginTop: "20px",
-    padding: "18px",
-    borderTop: "1px solid #e5e7eb",
+    padding: "17px 18px",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
-    fontSize: "17px",
+    gap: "20px",
+    background: "#FAFAF9",
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "16px",
   },
 
   gridBdi: {
     display: "grid",
     gridTemplateColumns:
       "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "15px",
+    gap: "14px",
   },
 
   valorFinal: {
-    marginTop: "20px",
-    background: "#111827",
-    color: "#ffffff",
-    borderRadius: "10px",
-    padding: "30px",
+    marginTop: "24px",
+    background: "#FFF7ED",
+    color:
+      tema.cores.grafite,
+    border:
+      `2px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "26px",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
     gap: "25px",
+    boxShadow:
+      "0 6px 18px rgba(249, 115, 22, 0.08)",
   },
 
   rotuloFinal: {
-    fontSize: "13px",
-    fontWeight: 700,
+    color: "#9A3412",
+    fontSize: "11px",
+    fontWeight: 800,
+    letterSpacing: "0.8px",
   },
 
   descricaoFinal: {
     margin: "7px 0 0",
-    fontSize: "13px",
-    color: "#d1d5db",
+    fontSize: "12px",
+    color:
+      tema.cores.textoSecundario,
   },
 
   numeroFinal: {
-    fontSize: "28px",
-    whiteSpace: "nowrap" as const,
+    color:
+      tema.cores.grafite,
+    fontSize: "30px",
+    whiteSpace:
+      "nowrap" as const,
   },
 
   acoes: {
-    marginTop: "20px",
+    marginTop: "22px",
+    paddingTop: "20px",
     display: "flex",
-    justifyContent: "flex-end",
+    justifyContent:
+      "flex-end",
     gap: "10px",
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
   },
 
   botaoSecundario: {
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "11px 16px",
+    height: "44px",
+    padding: "0 17px",
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
     cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: 600,
   },
 
   botaoVoltarProjeto: {
-    background: "#111827",
-    color: "#ffffff",
+    height: "44px",
+    padding: "0 18px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
     border: "none",
-    borderRadius: "6px",
-    padding: "11px 16px",
+    borderRadius:
+      tema.bordas.pequena,
     cursor: "pointer",
+    fontWeight: 700,
+  },
+
+  sucesso: {
+    marginTop: "20px",
+    background: "#F0FDF4",
+    color: "#15803D",
+    border:
+      "1px solid #BBF7D0",
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "12px 14px",
+    fontSize: "12px",
+  },
+
+  avisoFinalizado: {
+    marginTop: "20px",
+    background: "#FFF7ED",
+    color: "#9A3412",
+    border:
+      "1px solid #FED7AA",
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "12px 14px",
+    fontSize: "12px",
     fontWeight: 600,
   },
-    sucesso: {
-    marginTop: "20px",
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
-    borderRadius: "7px",
-    padding: "12px 14px",
-    fontSize: "13px",
-    },
 
-    avisoFinalizado: {
-    marginTop: "20px",
-    background: "#f3f4f6",
-    color: "#374151",
-    border: "1px solid #d1d5db",
-    borderRadius: "7px",
-    padding: "12px 14px",
-    fontSize: "13px",
-    fontWeight: 600,
-    },
-
-    botaoFinalizar: {
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
-    padding: "11px 16px",
-    cursor: "pointer",
-    fontWeight: 600,
-    },
-
-    botaoRelatorio: {
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
-    padding: "11px 16px",
-    cursor: "pointer",
-    fontWeight: 600,
-    },
-    overlayModal: {
-    position: "fixed" as const,
-    inset: 0,
-
+  botaoFinalizar: {
+    height: "44px",
+    padding: "0 18px",
     background:
-        "rgba(17, 24, 39, 0.65)",
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
+    border: "none",
+    borderRadius:
+      tema.bordas.pequena,
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: 700,
+  },
 
-    backdropFilter: "blur(2px)",
+  botaoRelatorio: {
+    height: "44px",
+    padding: "0 18px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
+    border: "none",
+    borderRadius:
+      tema.bordas.pequena,
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: 700,
+  },
 
+  overlayModal: {
+    position:
+      "fixed" as const,
+    inset: 0,
+    background:
+      "rgba(23, 23, 23, 0.55)",
+    backdropFilter:
+      "blur(3px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-
     padding: "20px",
-
     zIndex: 9999,
-    },
+  },
 
-    modalFinalizacao: {
+  modalFinalizacao: {
     width: "100%",
     maxWidth: "500px",
-
-    background: "#ffffff",
-
-    borderRadius: "22px",
-
-    padding: "32px",
-
-    border: "1px solid #e5e7eb",
-
+    background:
+      tema.cores.branco,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "30px",
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderTop:
+      `4px solid ${tema.cores.laranja}`,
     boxShadow:
-        "0 25px 60px rgba(0, 0, 0, 0.30)",
-    },
+      "0 25px 60px rgba(0, 0, 0, 0.22)",
+  },
 
-    iconeModal: {
-    width: "52px",
-    height: "52px",
-
-    borderRadius: "16px",
-
-    background: "#111827",
-    color: "#ffffff",
-
+  iconeModal: {
+    width: "50px",
+    height: "50px",
+    borderRadius: "12px",
+    background: "#FFF7ED",
+    color:
+      tema.cores.laranja,
+    border:
+      "1px solid #FED7AA",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontSize: "22px",
+    fontWeight: 800,
+    marginBottom: "18px",
+  },
 
-    fontSize: "24px",
-    fontWeight: 700,
-
-    marginBottom: "20px",
-    },
-
-    tituloModal: {
+  tituloModal: {
     margin: 0,
-
-    color: "#111827",
-
-    fontSize: "23px",
+    color:
+      tema.cores.grafite,
+    fontSize: "22px",
     fontWeight: 700,
-    },
+  },
 
-    textoModal: {
+  textoModal: {
     margin: "10px 0 20px",
-
-    color: "#6b7280",
-
-    fontSize: "14px",
-    lineHeight: 1.6,
-    },
-
-    avisoModal: {
-    background: "#f9fafb",
-
-    border: "1px solid #e5e7eb",
-    borderRadius: "14px",
-
-    padding: "16px",
-
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "6px",
-
-    color: "#4b5563",
-
+    color:
+      tema.cores.textoSecundario,
     fontSize: "13px",
+    lineHeight: 1.6,
+  },
+
+  avisoModal: {
+    background: "#FAFAF9",
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "15px",
+    display: "flex",
+    flexDirection:
+      "column" as const,
+    gap: "6px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "12px",
     lineHeight: 1.5,
-    },
+  },
 
-    valorModal: {
+  valorModal: {
     marginTop: "18px",
-
-    padding: "18px",
-
-    background: "#111827",
-    color: "#ffffff",
-
-    borderRadius: "14px",
-
+    padding: "17px",
+    background: "#FFF7ED",
+    color:
+      tema.cores.grafite,
+    border:
+      `2px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.pequena,
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-
+    justifyContent:
+      "space-between",
     gap: "15px",
+    fontSize: "13px",
+  },
 
-    fontSize: "14px",
-    },
-
-    acoesModal: {
-    marginTop: "25px",
-
+  acoesModal: {
+    marginTop: "24px",
     display: "flex",
-    justifyContent: "flex-end",
-
+    justifyContent:
+      "flex-end",
     gap: "10px",
-    },
+  },
 
-    botaoCancelarModal: {
-    background: "#ffffff",
-
-    color: "#374151",
-
-    border: "1px solid #d1d5db",
-    borderRadius: "10px",
-
-    padding: "12px 18px",
-
+  botaoCancelarModal: {
+    height: "43px",
+    padding: "0 17px",
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
     cursor: "pointer",
+    fontSize: "13px",
     fontWeight: 600,
-    },
+  },
 
-    botaoConfirmarModal: {
-    background: "#111827",
-
-    color: "#ffffff",
-
+  botaoConfirmarModal: {
+    height: "43px",
+    padding: "0 18px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
     border: "none",
-    borderRadius: "10px",
-
-    padding: "12px 18px",
-
+    borderRadius:
+      tema.bordas.pequena,
     cursor: "pointer",
-    fontWeight: 600,
-    },
+    fontSize: "13px",
+    fontWeight: 700,
+  },
 };

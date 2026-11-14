@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import {
   ChangeEvent,
   FormEvent,
@@ -14,6 +16,8 @@ import {
 import {
   apiAutenticada,
 } from "@/servicos/api";
+
+import { tema } from "@/estilos/tema";
 
 type ResumoImportacao = {
   totalLinhas: number;
@@ -38,7 +42,7 @@ type RespostaImportacao = {
 
   elementos: ElementoImportado[];
 
-  erros: string[];    
+  erros: string[];
 };
 
 type ElementoImportado = {
@@ -59,10 +63,18 @@ type ElementoImportado = {
 
   quantidade?: number;
 
-  areaSecao?: number | string | null;
-  area_secao?: number | string | null;
+  areaSecao?:
+    | number
+    | string
+    | null;
+
+  area_secao?:
+    | number
+    | string
+    | null;
 
   valido?: boolean;
+
   erros?: string[];
 };
 
@@ -77,7 +89,10 @@ export default function ImportacaoPage() {
   const [arquivo, setArquivo] =
     useState<File | null>(null);
 
-  const [resultado, setResultado] =
+  const [
+    resultado,
+    setResultado,
+  ] =
     useState<RespostaImportacao | null>(
       null
     );
@@ -88,16 +103,20 @@ export default function ImportacaoPage() {
   const [enviando, setEnviando] =
     useState(false);
 
-  const [confirmando, setConfirmando] =
-    useState(false);
+  const [
+    confirmando,
+    setConfirmando,
+  ] = useState(false);
 
-  const [confirmado, setConfirmado] =
-    useState(false);
+  const [
+    confirmado,
+    setConfirmado,
+  ] = useState(false);
 
   const [
     mensagemConfirmacao,
     setMensagemConfirmacao,
-    ] = useState("");
+  ] = useState("");
 
   function obterLinha(
     elemento: ElementoImportado
@@ -121,7 +140,10 @@ export default function ImportacaoPage() {
   }
 
   function formatarNumero(
-    valor?: number | string | null,
+    valor?:
+      | number
+      | string
+      | null,
     casas = 3
   ) {
     if (
@@ -132,26 +154,35 @@ export default function ImportacaoPage() {
       return "-";
     }
 
-    const numero = Number(valor);
+    const numero =
+      Number(valor);
 
-    if (Number.isNaN(numero)) {
+    if (
+      Number.isNaN(numero)
+    ) {
       return String(valor);
     }
 
     return numero.toLocaleString(
       "pt-BR",
       {
-        minimumFractionDigits: casas,
-        maximumFractionDigits: casas,
+        minimumFractionDigits:
+          casas,
+
+        maximumFractionDigits:
+          casas,
       }
     );
   }
 
   function selecionarArquivo(
-    evento: ChangeEvent<HTMLInputElement>
+    evento:
+      ChangeEvent<HTMLInputElement>
   ) {
     setErro("");
     setResultado(null);
+    setConfirmado(false);
+    setMensagemConfirmacao("");
 
     const selecionado =
       evento.target.files?.[0];
@@ -178,9 +209,9 @@ export default function ImportacaoPage() {
     setArquivo(selecionado);
   }
 
-
   async function enviarPlanilha(
-    evento: FormEvent<HTMLFormElement>
+    evento:
+      FormEvent<HTMLFormElement>
   ) {
     evento.preventDefault();
 
@@ -195,9 +226,12 @@ export default function ImportacaoPage() {
     setErro("");
     setEnviando(true);
     setResultado(null);
+    setConfirmado(false);
+    setMensagemConfirmacao("");
 
     try {
-      const formData = new FormData();
+      const formData =
+        new FormData();
 
       formData.append(
         "arquivo",
@@ -213,7 +247,9 @@ export default function ImportacaoPage() {
           }
         );
 
-      if (resposta.status === 401) {
+      if (
+        resposta.status === 401
+      ) {
         localStorage.removeItem(
           "estrutec_token"
         );
@@ -245,19 +281,20 @@ export default function ImportacaoPage() {
     }
   }
 
-    async function confirmarImportacao() {
+  async function confirmarImportacao() {
     if (!resultado) {
-        return;
+      return;
     }
 
     if (
-        resultado.resumo.elementosComErro > 0
+      resultado.resumo
+        .elementosComErro > 0
     ) {
-        setErro(
+      setErro(
         "Corrija os elementos com erro antes de confirmar a importação."
-        );
+      );
 
-        return;
+      return;
     }
 
     setErro("");
@@ -265,144 +302,317 @@ export default function ImportacaoPage() {
     setMensagemConfirmacao("");
 
     try {
-        const resposta =
+      const resposta =
         await apiAutenticada(
-            `/projetos/${id}/confirmar-importacao`,
-            {
+          `/projetos/${id}/confirmar-importacao`,
+          {
             method: "POST",
 
-            body: JSON.stringify({
+            body:
+              JSON.stringify({
                 elementos:
-                resultado.elementos,
-            }),
-            }
+                  resultado.elementos,
+              }),
+          }
         );
 
-        if (resposta.status === 401) {
+      if (
+        resposta.status === 401
+      ) {
         localStorage.removeItem(
-            "estrutec_token"
+          "estrutec_token"
         );
 
         router.push("/login");
 
         return;
-        }
+      }
 
-        const dados =
+      const dados =
         await resposta.json();
 
-        if (!resposta.ok) {
+      if (!resposta.ok) {
         setErro(
-            dados.erro ||
+          dados.erro ||
             "Não foi possível confirmar a importação."
         );
 
         return;
-        }
+      }
 
-        setConfirmado(true);
+      setConfirmado(true);
 
-        setMensagemConfirmacao(
+      setMensagemConfirmacao(
         dados.mensagem ||
-            "Importação confirmada com sucesso!"
-        );
+          "Importação confirmada com sucesso!"
+      );
     } catch {
-        setErro(
+      setErro(
         "Não foi possível conectar ao servidor."
-        );
+      );
     } finally {
-        setConfirmando(false);
+      setConfirmando(false);
     }
-    }
+  }
+
+  const possuiErros =
+    Boolean(
+      resultado &&
+        resultado.resumo
+          .elementosComErro > 0
+    );
 
   return (
     <main style={estilos.pagina}>
       <header style={estilos.cabecalho}>
-        <div>
-          <h1 style={estilos.logo}>
-            ESTRUTEC
+        <div
+          style={
+            estilos.cabecalhoConteudo
+          }
+        >
+          <div
+            style={estilos.identidade}
+          >
+            <Image
+              src="/estrutec-logo.png"
+              alt="Estrutec"
+              width={150}
+              height={70}
+              priority
+              style={estilos.logo}
+            />
+
+            <div
+              style={estilos.divisor}
+            />
+
+            <div>
+              <span
+                style={
+                  estilos.rotuloCabecalho
+                }
+              >
+                Projetos
+              </span>
+
+              <strong
+                style={
+                  estilos.tituloCabecalho
+                }
+              >
+                Importação
+              </strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            style={
+              estilos.botaoVoltar
+            }
+            onClick={() =>
+              router.push(
+                `/projetos/${id}`
+              )
+            }
+          >
+            Voltar ao projeto
+          </button>
+        </div>
+      </header>
+
+      <section
+        style={estilos.conteudo}
+      >
+        <div style={estilos.topo}>
+          <span
+            style={
+              estilos.sobretitulo
+            }
+          >
+            IMPORTAÇÃO
+          </span>
+
+          <h1
+            style={estilos.tituloPagina}
+          >
+            Elementos pré-moldados
           </h1>
 
-          <p style={estilos.subtitulo}>
-            Importação da Planilha
+          <p
+            style={
+              estilos.descricaoPagina
+            }
+          >
+            Importe a planilha do
+            projeto e confira os
+            elementos identificados
+            antes de prosseguir para a
+            fabricação.
           </p>
         </div>
 
-        <button
-          style={estilos.botaoVoltar}
-          onClick={() =>
-            router.push(
-              `/projetos/${id}`
-            )
-          }
-        >
-          ← Voltar ao projeto
-        </button>
-      </header>
-
-      <section style={estilos.conteudo}>
         <div style={estilos.card}>
-          <h2 style={estilos.titulo}>
-            Importar elementos pré-moldados
-          </h2>
-
-          <p style={estilos.descricao}>
-            Selecione a planilha padrão
-            contendo os elementos estruturais
-            do projeto.
-          </p>
-
-          <form
-            onSubmit={enviarPlanilha}
-            style={estilos.formulario}
+          <div
+            style={
+              estilos.cardCabecalho
+            }
           >
-            <div style={estilos.upload}>
-              <label
-                htmlFor="arquivo"
-                style={estilos.label}
-              >
-                Planilha Excel (.xlsx)
-              </label>
-
-              <input
-                id="arquivo"
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={
-                  selecionarArquivo
+            <div>
+              <h2
+                style={
+                  estilos.tituloCard
                 }
-              />
+              >
+                Importar planilha
+              </h2>
 
-              {arquivo && (
-                <div
-                  style={
-                    estilos.arquivoSelecionado
-                  }
-                >
-                  <strong>
-                    Arquivo selecionado:
-                  </strong>
-
-                  <span>
-                    {arquivo.name}
-                  </span>
-                </div>
-              )}
+              <p
+                style={
+                  estilos.descricaoCard
+                }
+              >
+                O arquivo deve estar no
+                formato Excel (.xlsx).
+              </p>
             </div>
 
-            {erro && (
-              <div style={estilos.erro}>
-                {erro}
+            <span
+              style={
+                estilos.formatoArquivo
+              }
+            >
+              .XLSX
+            </span>
+          </div>
+
+          <form
+            onSubmit={
+              enviarPlanilha
+            }
+            style={
+              estilos.formulario
+            }
+          >
+            <div
+              style={estilos.upload}
+            >
+              <div
+                style={
+                  estilos.iconeUpload
+                }
+              >
+                XLS
+              </div>
+
+              <div
+                style={
+                  estilos.uploadConteudo
+                }
+              >
+                <label
+                  htmlFor="arquivo"
+                  style={
+                    estilos.label
+                  }
+                >
+                  Selecione a planilha
+                  do projeto
+                </label>
+
+                <span
+                  style={
+                    estilos.ajudaUpload
+                  }
+                >
+                  Somente arquivos
+                  Excel no formato
+                  .xlsx.
+                </span>
+
+                <input
+                  id="arquivo"
+                  type="file"
+                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={
+                    selecionarArquivo
+                  }
+                  style={
+                    estilos.inputArquivo
+                  }
+                />
+              </div>
+            </div>
+
+            {arquivo && (
+              <div
+                style={
+                  estilos.arquivoSelecionado
+                }
+              >
+                <div
+                  style={
+                    estilos.arquivoIcone
+                  }
+                >
+                  ✓
+                </div>
+
+                <div>
+                  <span
+                    style={
+                      estilos.arquivoRotulo
+                    }
+                  >
+                    Arquivo selecionado
+                  </span>
+
+                  <strong
+                    style={
+                      estilos.arquivoNome
+                    }
+                  >
+                    {arquivo.name}
+                  </strong>
+                </div>
               </div>
             )}
 
-            <div style={estilos.acoes}>
+            {erro && (
+              <div
+                style={
+                  estilos.erro
+                }
+              >
+                <strong>
+                  Atenção
+                </strong>
+
+                <span>
+                  {erro}
+                </span>
+              </div>
+            )}
+
+            <div
+              style={estilos.acoes}
+            >
               <button
                 type="submit"
                 disabled={
-                  !arquivo || enviando
+                  !arquivo ||
+                  enviando
                 }
-                style={estilos.botaoEnviar}
+                style={{
+                  ...estilos
+                    .botaoEnviar,
+
+                  ...(!arquivo ||
+                  enviando
+                    ? estilos
+                        .botaoDesabilitado
+                    : {}),
+                }}
               >
                 {enviando
                   ? "Processando..."
@@ -413,281 +623,565 @@ export default function ImportacaoPage() {
         </div>
 
         {resultado && (
-        <div style={estilos.cardResultado}>
-            <h3 style={estilos.tituloResultado}>
-            Planilha processada
-            </h3>
-
-            <p style={estilos.sucesso}>
-            {resultado.mensagem}
-            </p>
-
-            <div style={estilos.resumo}>
-            <div style={estilos.indicador}>
-                <span>
-                Linhas identificadas
+          <div
+            style={
+              estilos.cardResultado
+            }
+          >
+            <div
+              style={
+                estilos.resultadoCabecalho
+              }
+            >
+              <div>
+                <span
+                  style={
+                    estilos.sobretituloResultado
+                  }
+                >
+                  RESULTADO DA IMPORTAÇÃO
                 </span>
 
-                <strong>
-                {resultado.resumo.totalLinhas}
-                </strong>
-            </div>
-
-            <div style={estilos.indicador}>
-                <span>Total de peças</span>
-
-                <strong>
-                {resultado.resumo.totalPecas}
-                </strong>
-            </div>
-
-            <div style={estilos.indicador}>
-                <span>Pilares</span>
-
-                <strong>
-                {resultado.resumo.pilares}
-                </strong>
-            </div>
-
-            <div style={estilos.indicador}>
-                <span>Vigas</span>
-
-                <strong>
-                {resultado.resumo.vigas}
-                </strong>
-            </div>
-
-            <div style={estilos.indicador}>
-                <span>
-                Elementos com erro
-                </span>
-
-                <strong>
-                {
-                    resultado.resumo
-                    .elementosComErro
-                }
-                </strong>
-            </div>
-            </div>
-
-            <div style={estilos.preview}>
-            <div style={estilos.cabecalhoPreview}>
-                <div>
-                <h3 style={estilos.tituloPreview}>
-                    Elementos identificados
-                </h3>
+                <h2
+                  style={
+                    estilos.tituloResultado
+                  }
+                >
+                  Planilha processada
+                </h2>
 
                 <p
-                    style={
-                    estilos.descricaoPreview
-                    }
+                  style={
+                    estilos.sucesso
+                  }
                 >
-                    Confira os dados antes de
-                    confirmar a importação.
+                  {resultado.mensagem}
                 </p>
-                </div>
+              </div>
 
-                <span
-                style={
-                    estilos.quantidadePreview
-                }
-                >
-                {resultado.elementos.length}
-                {" "}registro(s)
-                </span>
+              <div
+                style={{
+                  ...estilos
+                    .statusResultado,
+
+                  ...(possuiErros
+                    ? estilos
+                        .statusComErro
+                    : estilos
+                        .statusValido),
+                }}
+              >
+                {possuiErros
+                  ? "Revisão necessária"
+                  : "Pronto para confirmar"}
+              </div>
             </div>
 
             <div
-                style={estilos.tabelaContainer}
+              style={
+                estilos.resumo
+              }
             >
-                <table style={estilos.tabela}>
-                <thead>
+              <div
+                style={
+                  estilos.indicador
+                }
+              >
+                <span
+                  style={
+                    estilos.indicadorRotulo
+                  }
+                >
+                  Linhas identificadas
+                </span>
+
+                <strong
+                  style={
+                    estilos.indicadorValor
+                  }
+                >
+                  {
+                    resultado.resumo
+                      .totalLinhas
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={
+                  estilos.indicador
+                }
+              >
+                <span
+                  style={
+                    estilos.indicadorRotulo
+                  }
+                >
+                  Total de peças
+                </span>
+
+                <strong
+                  style={
+                    estilos.indicadorValor
+                  }
+                >
+                  {
+                    resultado.resumo
+                      .totalPecas
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={
+                  estilos.indicador
+                }
+              >
+                <span
+                  style={
+                    estilos.indicadorRotulo
+                  }
+                >
+                  Pilares
+                </span>
+
+                <strong
+                  style={
+                    estilos.indicadorValor
+                  }
+                >
+                  {
+                    resultado.resumo
+                      .pilares
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={
+                  estilos.indicador
+                }
+              >
+                <span
+                  style={
+                    estilos.indicadorRotulo
+                  }
+                >
+                  Vigas
+                </span>
+
+                <strong
+                  style={
+                    estilos.indicadorValor
+                  }
+                >
+                  {
+                    resultado.resumo
+                      .vigas
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  ...estilos.indicador,
+
+                  ...(possuiErros
+                    ? estilos
+                        .indicadorErro
+                    : {}),
+                }}
+              >
+                <span
+                  style={
+                    estilos.indicadorRotulo
+                  }
+                >
+                  Elementos com erro
+                </span>
+
+                <strong
+                  style={{
+                    ...estilos
+                      .indicadorValor,
+
+                    ...(possuiErros
+                      ? estilos
+                          .valorErro
+                      : {}),
+                  }}
+                >
+                  {
+                    resultado.resumo
+                      .elementosComErro
+                  }
+                </strong>
+              </div>
+            </div>
+
+            <div
+              style={
+                estilos.preview
+              }
+            >
+              <div
+                style={
+                  estilos.cabecalhoPreview
+                }
+              >
+                <div>
+                  <h3
+                    style={
+                      estilos.tituloPreview
+                    }
+                  >
+                    Elementos
+                    identificados
+                  </h3>
+
+                  <p
+                    style={
+                      estilos.descricaoPreview
+                    }
+                  >
+                    Confira os dados
+                    antes de confirmar
+                    a importação.
+                  </p>
+                </div>
+
+                <span
+                  style={
+                    estilos.quantidadePreview
+                  }
+                >
+                  {
+                    resultado.elementos
+                      .length
+                  }{" "}
+                  registro(s)
+                </span>
+              </div>
+
+              <div
+                style={
+                  estilos.tabelaContainer
+                }
+              >
+                <table
+                  style={
+                    estilos.tabela
+                  }
+                >
+                  <thead>
                     <tr>
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Linha
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Elemento
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Tipo
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Seção
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         B (m)
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         H (m)
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Comp. (m)
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Qtde.
-                    </th>
+                      </th>
 
-                    <th style={estilos.th}>
+                      <th
+                        style={
+                          estilos.th
+                        }
+                      >
                         Situação
-                    </th>
+                      </th>
                     </tr>
-                </thead>
+                  </thead>
 
-                <tbody>
+                  <tbody>
                     {resultado.elementos.map(
-                    (elemento, indice) => (
-                        <tr key={indice}>
-                        <td style={estilos.td}>
-                            {obterLinha(
-                            elemento
-                            )}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {obterNome(
-                            elemento
-                            )}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {elemento.tipo ||
-                            "-"}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {elemento.secao ||
-                            "-"}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {formatarNumero(
-                            elemento.largura
-                            )}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {formatarNumero(
-                            elemento.altura
-                            )}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {formatarNumero(
-                            elemento.comprimento
-                            )}
-                        </td>
-
-                        <td style={estilos.td}>
-                            {
-                            elemento.quantidade ??
-                            "-"
+                      (
+                        elemento,
+                        indice
+                      ) => (
+                        <tr
+                          key={
+                            indice
+                          }
+                        >
+                          <td
+                            style={
+                              estilos.td
                             }
-                        </td>
+                          >
+                            {obterLinha(
+                              elemento
+                            )}
+                          </td>
 
-                        <td style={estilos.td}>
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            <strong>
+                              {obterNome(
+                                elemento
+                              )}
+                            </strong>
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {elemento.tipo ||
+                              "-"}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {elemento.secao ||
+                              "-"}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {formatarNumero(
+                              elemento.largura
+                            )}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {formatarNumero(
+                              elemento.altura
+                            )}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {formatarNumero(
+                              elemento.comprimento
+                            )}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
+                            {elemento.quantidade ??
+                              "-"}
+                          </td>
+
+                          <td
+                            style={
+                              estilos.td
+                            }
+                          >
                             {elemento.erros &&
                             elemento.erros
-                            .length > 0 ? (
-                            <span
+                              .length >
+                              0 ? (
+                              <span
                                 style={
-                                estilos.comErro
+                                  estilos.comErro
                                 }
-                            >
+                              >
                                 Com erro
-                            </span>
+                              </span>
                             ) : (
-                            <span
+                              <span
                                 style={
-                                estilos.valido
+                                  estilos.valido
                                 }
-                            >
+                              >
                                 Válido
-                            </span>
+                              </span>
                             )}
-                        </td>
+                          </td>
                         </tr>
-                    )
+                      )
                     )}
-                </tbody>
+                  </tbody>
                 </table>
+              </div>
             </div>
-            </div>
-
-
-            {/* ERROS GERAIS, SE EXISTIREM */}
 
             {resultado.erros &&
-            resultado.erros.length > 0 && (
+              resultado.erros
+                .length > 0 && (
                 <div
-                style={estilos.listaErros}
+                  style={
+                    estilos.listaErros
+                  }
                 >
-                <strong>
-                    Problemas encontrados:
-                </strong>
+                  <strong>
+                    Problemas
+                    encontrados:
+                  </strong>
 
-                <ul>
-                    {resultado.erros.map(
-                    (erro, indice) => (
-                        <li key={indice}>
-                        {String(erro)}
-                        </li>
-                    )
-                    )}
-                </ul>
-                </div>
-            )}
-                <div style={estilos.acoesConfirmacao}>
-                {confirmado ? (
-                    <>
-                    <div
-                        style={
-                        estilos.confirmacaoSucesso
-                        }
-                    >
-                        {mensagemConfirmacao}
-                    </div>
-
-                    <button
-                        type="button"
-                        style={estilos.botaoContinuar}
-                        onClick={() =>
-                        router.push(
-                            `/projetos/${id}/fabricacao`
-                        )
-                        }
-                    >
-                        Continuar para fabricação →
-                    </button>
-                    </>
-                ) : (
-                    <button
-                    type="button"
-                    onClick={confirmarImportacao}
-                    disabled={
-                        confirmando ||
-                        resultado.resumo
-                        .elementosComErro > 0
-                    }
+                  <ul
                     style={
-                        estilos.botaoConfirmar
+                      estilos.listaErrosUl
                     }
-                    >
-                    {confirmando
-                        ? "Confirmando..."
-                        : "Confirmar importação"}
-                    </button>
-                )}
+                  >
+                    {resultado.erros.map(
+                      (
+                        mensagem,
+                        indice
+                      ) => (
+                        <li
+                          key={
+                            indice
+                          }
+                        >
+                          {String(
+                            mensagem
+                          )}
+                        </li>
+                      )
+                    )}
+                  </ul>
                 </div>
-        </div>
+              )}
+
+            <div
+              style={
+                estilos.acoesConfirmacao
+              }
+            >
+              {confirmado ? (
+                <>
+                  <div
+                    style={
+                      estilos.confirmacaoSucesso
+                    }
+                  >
+                    <strong>
+                      Importação
+                      confirmada
+                    </strong>
+
+                    <span>
+                      {
+                        mensagemConfirmacao
+                      }
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    style={
+                      estilos.botaoContinuar
+                    }
+                    onClick={() =>
+                      router.push(
+                        `/projetos/${id}/fabricacao`
+                      )
+                    }
+                  >
+                    Continuar para
+                    fabricação →
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={
+                    confirmarImportacao
+                  }
+                  disabled={
+                    confirmando ||
+                    resultado.resumo
+                      .elementosComErro >
+                      0
+                  }
+                  style={{
+                    ...estilos
+                      .botaoConfirmar,
+
+                    ...(confirmando ||
+                    resultado.resumo
+                      .elementosComErro >
+                      0
+                      ? estilos
+                          .botaoDesabilitado
+                      : {}),
+                  }}
+                >
+                  {confirmando
+                    ? "Confirmando..."
+                    : "Confirmar importação"}
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </section>
     </main>
@@ -697,283 +1191,898 @@ export default function ImportacaoPage() {
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif",
+
+    background:
+      tema.cores.fundo,
+
+    color:
+      tema.cores.grafite,
+
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   cabecalho: {
-    minHeight: "80px",
-    background: "#ffffff",
+    background:
+      tema.cores.branco,
+
     borderBottom:
-      "1px solid #e5e7eb",
-    padding: "16px 40px",
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  cabecalhoConteudo: {
+    maxWidth: "1600px",
+
+    margin: "0 auto",
+
+    padding: "14px 24px",
+
     display: "flex",
+
     alignItems: "center",
-    justifyContent: "space-between",
+
+    justifyContent:
+      "space-between",
+
+    gap: "20px",
+  },
+
+  identidade: {
+    display: "flex",
+
+    alignItems: "center",
+
+    gap: "18px",
   },
 
   logo: {
-    margin: 0,
-    fontSize: "24px",
+    width: "125px",
+
+    height: "auto",
+
+    objectFit:
+      "contain" as const,
   },
 
-  subtitulo: {
-    margin: "4px 0 0",
-    color: "#6b7280",
-    fontSize: "13px",
+  divisor: {
+    width: "1px",
+
+    height: "38px",
+
+    background:
+      tema.cores.borda,
+  },
+
+  rotuloCabecalho: {
+    display: "block",
+
+    marginBottom: "3px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+
+    fontWeight: 700,
+
+    letterSpacing: "1px",
+
+    textTransform:
+      "uppercase" as const,
+  },
+
+  tituloCabecalho: {
+    display: "block",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "15px",
   },
 
   botaoVoltar: {
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "10px 15px",
+    height: "40px",
+
+    padding: "0 16px",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    background:
+      tema.cores.branco,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "13px",
+
+    fontWeight: 600,
+
     cursor: "pointer",
   },
 
   conteudo: {
-    maxWidth: "1100px",
+    maxWidth: "1250px",
+
     margin: "0 auto",
-    padding: "35px 40px",
+
+    padding:
+      "42px 24px 60px",
+  },
+
+  topo: {
+    marginBottom: "28px",
+  },
+
+  sobretitulo: {
+    display: "block",
+
+    marginBottom: "8px",
+
+    color:
+      tema.cores.laranja,
+
+    fontSize: "11px",
+
+    fontWeight: 800,
+
+    letterSpacing: "1.4px",
+  },
+
+  tituloPagina: {
+    margin: 0,
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "30px",
+
+    fontWeight: 750,
+  },
+
+  descricaoPagina: {
+    maxWidth: "680px",
+
+    margin: "8px 0 0",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "14px",
+
+    lineHeight: 1.55,
   },
 
   card: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    overflow: "hidden",
+
+    background:
+      tema.cores.branco,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.grande,
+
+    boxShadow:
+      tema.sombras.card,
   },
 
-  titulo: {
+  cardCabecalho: {
+    padding: "22px 26px",
+
+    display: "flex",
+
+    justifyContent:
+      "space-between",
+
+    alignItems: "center",
+
+    gap: "20px",
+
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  tituloCard: {
     margin: 0,
-    fontSize: "22px",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "18px",
   },
 
-  descricao: {
-    margin: "8px 0 25px",
-    color: "#6b7280",
-    lineHeight: 1.5,
+  descricaoCard: {
+    margin: "5px 0 0",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "12px",
+  },
+
+  formatoArquivo: {
+    padding: "6px 10px",
+
+    borderRadius: "20px",
+
+    background: "#FFF7ED",
+
+    color:
+      tema.cores.laranja,
+
+    fontSize: "11px",
+
+    fontWeight: 800,
+
+    letterSpacing: "0.6px",
   },
 
   formulario: {
+    padding: "26px",
+
     display: "flex",
-    flexDirection: "column" as const,
+
+    flexDirection:
+      "column" as const,
+
     gap: "20px",
   },
 
   upload: {
-    padding: "25px",
-    border: "2px dashed #d1d5db",
-    borderRadius: "8px",
+    minHeight: "145px",
+
+    padding: "24px",
+
     display: "flex",
-    flexDirection: "column" as const,
-    gap: "12px",
+
+    alignItems: "center",
+
+    gap: "20px",
+
+    border:
+      `2px dashed ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    background: "#FAFAF9",
+  },
+
+  iconeUpload: {
+    width: "58px",
+
+    height: "58px",
+
+    flexShrink: 0,
+
+    display: "flex",
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    borderRadius: "10px",
+
+    background: "#FFF7ED",
+
+    color:
+      tema.cores.laranja,
+
+    fontSize: "14px",
+
+    fontWeight: 800,
+  },
+
+  uploadConteudo: {
+    flex: 1,
+
+    minWidth: 0,
+
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    alignItems:
+      "flex-start",
+
+    gap: "7px",
   },
 
   label: {
-    fontWeight: 600,
+    color:
+      tema.cores.grafite,
+
+    fontWeight: 700,
+
     fontSize: "14px",
   },
 
+  ajudaUpload: {
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "12px",
+  },
+
+  inputArquivo: {
+    marginTop: "6px",
+
+    maxWidth: "100%",
+
+    fontSize: "13px",
+  },
+
   arquivoSelecionado: {
-    marginTop: "5px",
-    padding: "10px",
-    background: "#f3f4f6",
-    borderRadius: "6px",
+    padding: "13px 15px",
+
     display: "flex",
-    flexDirection: "column" as const,
-    gap: "4px",
+
+    alignItems: "center",
+
+    gap: "12px",
+
+    background: "#FFF7ED",
+
+    border:
+      "1px solid #FED7AA",
+
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  arquivoIcone: {
+    width: "30px",
+
+    height: "30px",
+
+    display: "flex",
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    borderRadius: "50%",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    fontSize: "13px",
+
+    fontWeight: 800,
+  },
+
+  arquivoRotulo: {
+    display: "block",
+
+    marginBottom: "2px",
+
+    color: "#9A3412",
+
+    fontSize: "10px",
+
+    fontWeight: 700,
+
+    textTransform:
+      "uppercase" as const,
+  },
+
+  arquivoNome: {
+    display: "block",
+
+    color:
+      tema.cores.grafite,
+
     fontSize: "13px",
   },
 
   erro: {
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "11px",
-    borderRadius: "6px",
-    fontSize: "13px",
+    padding: "12px 14px",
+
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    gap: "3px",
+
+    background:
+      tema.cores.erroFundo,
+
+    color:
+      tema.cores.erro,
+
+    border:
+      "1px solid #FECACA",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
   },
 
   acoes: {
+    paddingTop: "20px",
+
     display: "flex",
-    justifyContent: "flex-end",
+
+    justifyContent:
+      "flex-end",
+
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
   },
 
   botaoEnviar: {
-    background: "#111827",
-    color: "#ffffff",
+    minWidth: "160px",
+
+    height: "44px",
+
+    padding: "0 20px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 700,
+
     cursor: "pointer",
   },
 
+  botaoDesabilitado: {
+    opacity: 0.55,
+
+    cursor: "not-allowed",
+  },
+
   cardResultado: {
-    marginTop: "20px",
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    marginTop: "24px",
+
+    padding: "26px",
+
+    background:
+      tema.cores.branco,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.grande,
+
+    boxShadow:
+      tema.sombras.card,
+  },
+
+  resultadoCabecalho: {
+    display: "flex",
+
+    justifyContent:
+      "space-between",
+
+    alignItems: "flex-start",
+
+    gap: "20px",
+  },
+
+  sobretituloResultado: {
+    display: "block",
+
+    marginBottom: "5px",
+
+    color:
+      tema.cores.laranja,
+
+    fontSize: "10px",
+
+    fontWeight: 800,
+
+    letterSpacing: "1px",
   },
 
   tituloResultado: {
     margin: 0,
-    fontSize: "18px",
+
+    color:
+      tema.cores.grafite,
+
+    fontSize: "20px",
   },
 
   sucesso: {
-    color: "#166534",
-    marginTop: "8px",
+    margin: "6px 0 0",
+
+    color: "#15803D",
+
+    fontSize: "12px",
+  },
+
+  statusResultado: {
+    padding: "7px 11px",
+
+    borderRadius: "20px",
+
+    fontSize: "11px",
+
+    fontWeight: 700,
+
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  statusValido: {
+    color: "#15803D",
+
+    background: "#F0FDF4",
+
+    border:
+      "1px solid #BBF7D0",
+  },
+
+  statusComErro: {
+    color: "#B91C1C",
+
+    background: "#FEF2F2",
+
+    border:
+      "1px solid #FECACA",
   },
 
   resumo: {
-    marginTop: "20px",
+    marginTop: "24px",
+
     display: "grid",
+
     gridTemplateColumns:
       "repeat(auto-fit, minmax(150px, 1fr))",
+
     gap: "12px",
   },
 
   indicador: {
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
-    borderRadius: "7px",
+    minHeight: "85px",
+
     padding: "15px",
+
     display: "flex",
-    flexDirection: "column" as const,
-    gap: "6px",
+
+    flexDirection:
+      "column" as const,
+
+    justifyContent:
+      "space-between",
+
+    gap: "8px",
+
+    background: "#FAFAF9",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
   },
+
+  indicadorErro: {
+    background: "#FEF2F2",
+
+    border:
+      "1px solid #FECACA",
+  },
+
+  indicadorRotulo: {
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+  },
+
+  indicadorValor: {
+    color:
+      tema.cores.grafite,
+
+    fontSize: "22px",
+  },
+
+  valorErro: {
+    color: "#B91C1C",
+  },
+
   preview: {
-  marginTop: "30px",
-    },
+    marginTop: "32px",
+  },
 
-    cabecalhoPreview: {
+  cabecalhoPreview: {
     display: "flex",
-    justifyContent: "space-between",
+
+    justifyContent:
+      "space-between",
+
     alignItems: "center",
+
     gap: "20px",
+
     marginBottom: "15px",
-    },
+  },
 
-    tituloPreview: {
+  tituloPreview: {
     margin: 0,
-    fontSize: "18px",
-    },
 
-    descricaoPreview: {
+    color:
+      tema.cores.grafite,
+
+    fontSize: "17px",
+  },
+
+  descricaoPreview: {
     margin: "5px 0 0",
-    color: "#6b7280",
-    fontSize: "13px",
-    },
 
-    quantidadePreview: {
-    background: "#f3f4f6",
-    border: "1px solid #e5e7eb",
-    borderRadius: "20px",
-    padding: "7px 12px",
+    color:
+      tema.cores.textoSecundario,
+
     fontSize: "12px",
-    whiteSpace: "nowrap" as const,
-    },
+  },
 
-    tabelaContainer: {
-    width: "100%",
-    overflowX: "auto" as const,
-    border: "1px solid #e5e7eb",
-    borderRadius: "8px",
-    },
+  quantidadePreview: {
+    padding: "7px 11px",
 
-    tabela: {
+    background: "#FAFAF9",
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius: "20px",
+
+    color:
+      tema.cores.textoSecundario,
+
+    fontSize: "11px",
+
+    fontWeight: 600,
+
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  tabelaContainer: {
     width: "100%",
+
+    overflowX:
+      "auto" as const,
+
+    border:
+      `1px solid ${tema.cores.borda}`,
+
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  tabela: {
+    width: "100%",
+
     minWidth: "950px",
-    borderCollapse: "collapse" as const,
-    },
 
-    th: {
-    background: "#f9fafb",
-    color: "#4b5563",
-    textAlign: "left" as const,
+    borderCollapse:
+      "collapse" as const,
+  },
+
+  th: {
     padding: "12px 14px",
+
+    background: "#FAFAF9",
+
+    color:
+      tema.cores.textoSecundario,
+
+    textAlign:
+      "left" as const,
+
+    fontSize: "11px",
+
+    fontWeight: 700,
+
+    textTransform:
+      "uppercase" as const,
+
+    letterSpacing: "0.35px",
+
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  td: {
+    padding: "12px 14px",
+
+    color:
+      tema.cores.grafite,
+
     fontSize: "12px",
-    fontWeight: 600,
-    borderBottom: "1px solid #e5e7eb",
-    whiteSpace: "nowrap" as const,
-    },
 
-    td: {
-    padding: "12px 14px",
-    fontSize: "13px",
-    borderBottom: "1px solid #f0f0f0",
-    whiteSpace: "nowrap" as const,
-    },
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
 
-    valido: {
+    whiteSpace:
+      "nowrap" as const,
+  },
+
+  valido: {
     display: "inline-block",
-    background: "#dcfce7",
-    color: "#166534",
-    padding: "5px 9px",
-    borderRadius: "20px",
-    fontSize: "11px",
-    fontWeight: 600,
-    },
 
-    comErro: {
+    padding: "5px 9px",
+
+    borderRadius: "20px",
+
+    background: "#F0FDF4",
+
+    color: "#15803D",
+
+    border:
+      "1px solid #BBF7D0",
+
+    fontSize: "10px",
+
+    fontWeight: 700,
+  },
+
+  comErro: {
     display: "inline-block",
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "5px 9px",
-    borderRadius: "20px",
-    fontSize: "11px",
-    fontWeight: 600,
-    },
 
-    listaErros: {
-    marginTop: "15px",
-    padding: "15px",
-    background: "#fff7ed",
-    color: "#9a3412",
-    border: "1px solid #fed7aa",
-    borderRadius: "7px",
-    fontSize: "13px",
-    },
-    acoesConfirmacao: {
-    marginTop: "25px",
-    paddingTop: "20px",
-    borderTop: "1px solid #e5e7eb",
+    padding: "5px 9px",
+
+    borderRadius: "20px",
+
+    background: "#FEF2F2",
+
+    color: "#B91C1C",
+
+    border:
+      "1px solid #FECACA",
+
+    fontSize: "10px",
+
+    fontWeight: 700,
+  },
+
+  listaErros: {
+    marginTop: "18px",
+
+    padding: "15px 17px",
+
+    background: "#FFF7ED",
+
+    color: "#9A3412",
+
+    border:
+      "1px solid #FED7AA",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
+  },
+
+  listaErrosUl: {
+    margin:
+      "9px 0 0",
+
+    paddingLeft: "20px",
+
+    lineHeight: 1.6,
+  },
+
+  acoesConfirmacao: {
+    marginTop: "26px",
+
+    paddingTop: "22px",
+
     display: "flex",
+
     alignItems: "center",
-    justifyContent: "flex-end",
+
+    justifyContent:
+      "flex-end",
+
     gap: "15px",
-    },
 
-    botaoConfirmar: {
-    background: "#111827",
-    color: "#ffffff",
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  botaoConfirmar: {
+    minWidth: "180px",
+
+    height: "44px",
+
+    padding: "0 20px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
-    cursor: "pointer",
-    },
 
-    confirmacaoSucesso: {
-    marginRight: "auto",
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
-    padding: "11px 14px",
-    borderRadius: "6px",
+    borderRadius:
+      tema.bordas.pequena,
+
     fontSize: "13px",
-    fontWeight: 600,
-    },
 
-    botaoContinuar: {
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+    fontWeight: 700,
+
     cursor: "pointer",
-    },
+  },
+
+  confirmacaoSucesso: {
+    marginRight: "auto",
+
+    padding: "11px 14px",
+
+    display: "flex",
+
+    flexDirection:
+      "column" as const,
+
+    gap: "3px",
+
+    background: "#F0FDF4",
+
+    color: "#15803D",
+
+    border:
+      "1px solid #BBF7D0",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "12px",
+  },
+
+  botaoContinuar: {
+    minWidth: "205px",
+
+    height: "44px",
+
+    padding: "0 20px",
+
+    background:
+      tema.cores.laranja,
+
+    color:
+      tema.cores.branco,
+
+    border: "none",
+
+    borderRadius:
+      tema.bordas.pequena,
+
+    fontSize: "13px",
+
+    fontWeight: 700,
+
+    cursor: "pointer",
+  },
 };

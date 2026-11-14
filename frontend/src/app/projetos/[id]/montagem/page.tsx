@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
-
-import {
-  apiAutenticada,
-} from "@/servicos/api";
+import Image from "next/image";
+import {useEffect, useState,} from "react";
+import {useParams, useRouter,} from "next/navigation";
+import {apiAutenticada,} from "@/servicos/api";
+import { tema } from "@/estilos/tema";
 
 type EquipamentoMontagem = {
   id: number;
@@ -866,30 +858,64 @@ export default function MontagemPage() {
   return (
     <main style={estilos.pagina}>
       <header style={estilos.cabecalho}>
-        <div>
-          <h1 style={estilos.logo}>
-            ESTRUTEC
-          </h1>
+        <div style={estilos.cabecalhoConteudo}>
+          <div style={estilos.identidade}>
+            <Image
+              src="/estrutec-logo.png"
+              alt="Estrutec"
+              width={150}
+              height={70}
+              priority
+              style={estilos.logo}
+            />
 
-          <p style={estilos.subtitulo}>
-            Montagem
-          </p>
+            <div style={estilos.divisor} />
+
+            <div>
+              <span
+                style={estilos.rotuloCabecalho}
+              >
+                Projetos
+              </span>
+
+              <strong
+                style={estilos.tituloCabecalho}
+              >
+                Montagem
+              </strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            style={estilos.botaoVoltar}
+            onClick={() =>
+              router.push(
+                `/projetos/${id}`
+              )
+            }
+          >
+            Voltar ao projeto
+          </button>
         </div>
-
-        <button
-          type="button"
-          style={estilos.botaoVoltar}
-          onClick={() =>
-            router.push(
-              `/projetos/${id}`
-            )
-          }
-        >
-          ← Voltar ao projeto
-        </button>
       </header>
 
       <section style={estilos.conteudo}>
+        <div style={estilos.topoPagina}>
+          <span style={estilos.sobretitulo}>
+            MONTAGEM
+          </span>
+
+          <h1 style={estilos.tituloPagina}>
+            Planejamento da montagem
+          </h1>
+
+          <p style={estilos.descricaoPagina}>
+            Organize os equipamentos, equipes e
+            custos necessários para a execução da
+            montagem dos elementos pré-moldados.
+          </p>
+        </div>
         <div style={estilos.card}>
           <h2 style={estilos.titulo}>
             Custos Gerais da Montagem
@@ -1752,8 +1778,10 @@ export default function MontagemPage() {
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    fontFamily: "Arial, sans-serif",
+    background: tema.cores.fundo,
+    color: tema.cores.grafite,
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   centralizado: {
@@ -1761,61 +1789,168 @@ const estilos = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "Arial, sans-serif",
+    background: tema.cores.fundo,
+    color:
+      tema.cores.textoSecundario,
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
   },
 
   cabecalho: {
-    minHeight: "80px",
-    background: "#ffffff",
+    background:
+      tema.cores.branco,
     borderBottom:
-      "1px solid #e5e7eb",
-    padding: "16px 40px",
+      `1px solid ${tema.cores.borda}`,
+  },
+
+  cabecalhoConteudo: {
+    maxWidth: "1600px",
+    margin: "0 auto",
+    padding: "14px 24px",
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent:
+      "space-between",
+    gap: "20px",
+  },
+
+  identidade: {
+    display: "flex",
+    alignItems: "center",
+    gap: "18px",
   },
 
   logo: {
-    margin: 0,
-    fontSize: "24px",
+    width: "125px",
+    height: "auto",
+    objectFit:
+      "contain" as const,
   },
 
-  subtitulo: {
-    margin: "4px 0 0",
-    color: "#6b7280",
-    fontSize: "13px",
+  divisor: {
+    width: "1px",
+    height: "38px",
+    background:
+      tema.cores.borda,
+  },
+
+  rotuloCabecalho: {
+    display: "block",
+    marginBottom: "3px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "11px",
+    fontWeight: 700,
+    letterSpacing: "1px",
+    textTransform:
+      "uppercase" as const,
+  },
+
+  tituloCabecalho: {
+    display: "block",
+    color:
+      tema.cores.grafite,
+    fontSize: "15px",
   },
 
   botaoVoltar: {
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "10px 15px",
+    height: "40px",
+    padding: "0 16px",
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "13px",
+    fontWeight: 600,
     cursor: "pointer",
   },
 
   conteudo: {
-    maxWidth: "1100px",
+    width: "100%",
+    maxWidth: "1250px",
     margin: "0 auto",
-    padding: "35px 40px",
+    padding:
+      "42px 24px 60px",
+  },
+
+  topoPagina: {
+    marginBottom: "28px",
+  },
+
+  sobretitulo: {
+    display: "block",
+    marginBottom: "8px",
+    color:
+      tema.cores.laranja,
+    fontSize: "11px",
+    fontWeight: 800,
+    letterSpacing: "1.4px",
+  },
+
+  tituloPagina: {
+    margin: 0,
+    color:
+      tema.cores.grafite,
+    fontSize: "30px",
+    fontWeight: 750,
+  },
+
+  descricaoPagina: {
+    maxWidth: "760px",
+    margin: "8px 0 0",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "14px",
+    lineHeight: 1.55,
   },
 
   card: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "30px",
+    background:
+      tema.cores.branco,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "26px",
+    boxShadow:
+      tema.sombras.card,
+  },
+
+  cardSecundario: {
+    marginTop: "24px",
+    background:
+      tema.cores.branco,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderTop:
+      `3px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.grande,
+    padding: "26px",
+    boxShadow:
+      tema.sombras.card,
   },
 
   titulo: {
     margin: 0,
-    fontSize: "22px",
+    color:
+      tema.cores.grafite,
+    fontSize: "19px",
+    fontWeight: 700,
   },
 
   descricao: {
     margin: "7px 0 22px",
-    color: "#6b7280",
-    fontSize: "14px",
+    color:
+      tema.cores.textoSecundario,
+    fontSize: "13px",
+    lineHeight: 1.5,
   },
 
   gridFormulario: {
@@ -1827,191 +1962,291 @@ const estilos = {
 
   campo: {
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection:
+      "column" as const,
     gap: "7px",
-    fontSize: "13px",
-    fontWeight: 600,
+    color:
+      tema.cores.grafite,
+    fontSize: "12px",
+    fontWeight: 700,
   },
 
   input: {
-    height: "43px",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    padding: "0 11px",
-    fontSize: "14px",
+    width: "100%",
+    height: "44px",
+    boxSizing:
+      "border-box" as const,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "0 12px",
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    fontSize: "13px",
+    outline: "none",
   },
 
   campoObservacao: {
     marginTop: "20px",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection:
+      "column" as const,
     gap: "7px",
-    fontSize: "13px",
-    fontWeight: 600,
+    color:
+      tema.cores.grafite,
+    fontSize: "12px",
+    fontWeight: 700,
   },
 
   textarea: {
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
+    width: "100%",
+    boxSizing:
+      "border-box" as const,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
     padding: "12px",
-    fontFamily: "Arial, sans-serif",
-    resize: "vertical" as const,
+    background:
+      tema.cores.branco,
+    color:
+      tema.cores.grafite,
+    fontFamily:
+      "Arial, Helvetica, sans-serif",
+    fontSize: "13px",
+    lineHeight: 1.5,
+    resize:
+      "vertical" as const,
+    outline: "none",
   },
 
   erro: {
     marginTop: "18px",
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "11px",
-    borderRadius: "6px",
-    fontSize: "13px",
+    padding: "12px 14px",
+    background:
+      tema.cores.erroFundo,
+    color:
+      tema.cores.erro,
+    border:
+      "1px solid #FECACA",
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "12px",
   },
 
   sucesso: {
     marginTop: "18px",
-    background: "#dcfce7",
-    color: "#166534",
-    padding: "11px",
-    borderRadius: "6px",
-    fontSize: "13px",
+    padding: "12px 14px",
+    background: "#F0FDF4",
+    color: "#15803D",
+    border:
+      "1px solid #BBF7D0",
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "12px",
   },
 
   acoes: {
     marginTop: "20px",
+    paddingTop: "20px",
     display: "flex",
-    justifyContent: "flex-end",
+    justifyContent:
+      "flex-end",
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
   },
 
   botaoSalvar: {
-    background: "#111827",
-    color: "#ffffff",
+    minWidth: "160px",
+    height: "44px",
+    padding: "0 20px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "13px",
+    fontWeight: 700,
     cursor: "pointer",
   },
-  cardSecundario: {
-  marginTop: "20px",
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
-  borderRadius: "10px",
-  padding: "30px",
-    },
 
-    tabelaContainer: {
+  tabelaContainer: {
     marginTop: "25px",
-    overflowX: "auto" as const,
-    },
-
-    tabela: {
     width: "100%",
-    borderCollapse: "collapse" as const,
+    overflowX:
+      "auto" as const,
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
+  },
+
+  tabela: {
+    width: "100%",
+    borderCollapse:
+      "collapse" as const,
     fontSize: "13px",
-    },
+  },
 
-    th: {
-    textAlign: "left" as const,
-    padding: "12px",
-    background: "#f9fafb",
-    borderBottom: "1px solid #e5e7eb",
-    },
+  th: {
+    textAlign:
+      "left" as const,
+    padding: "12px 14px",
+    background: "#FAFAF9",
+    color:
+      tema.cores.textoSecundario,
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+    fontSize: "11px",
+    fontWeight: 700,
+    textTransform:
+      "uppercase" as const,
+    letterSpacing: "0.35px",
+  },
 
-    td: {
-    padding: "12px",
-    borderBottom: "1px solid #e5e7eb",
-    },
+  td: {
+    padding: "12px 14px",
+    color:
+      tema.cores.grafite,
+    borderBottom:
+      `1px solid ${tema.cores.borda}`,
+    fontSize: "12px",
+  },
 
-    cabecalhoCalculo: {
+  cabecalhoCalculo: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
     gap: "20px",
-    },
+  },
 
-    botaoCalcular: {
-    background: "#111827",
-    color: "#ffffff",
+  botaoCalcular: {
+    minWidth: "160px",
+    height: "44px",
+    padding: "0 20px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "13px",
+    fontWeight: 700,
     cursor: "pointer",
-    whiteSpace: "nowrap" as const,
-    },
+    whiteSpace:
+      "nowrap" as const,
+  },
 
-    resumoCalculo: {
-    marginTop: "20px",
+  resumoCalculo: {
+    marginTop: "22px",
     display: "grid",
     gridTemplateColumns:
-        "repeat(auto-fit, minmax(180px, 1fr))",
+      "repeat(auto-fit, minmax(180px, 1fr))",
     gap: "12px",
-    },
+  },
 
-    indicador: {
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
-    borderRadius: "7px",
+  indicador: {
+    minHeight: "85px",
+    background: "#FAFAF9",
+    border:
+      `1px solid ${tema.cores.borda}`,
+    borderRadius:
+      tema.bordas.pequena,
     padding: "15px",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection:
+      "column" as const,
+    justifyContent:
+      "space-between",
     gap: "6px",
-    },
+  },
 
-    subtituloTabela: {
+  subtituloTabela: {
     margin: "25px 0 10px",
+    color:
+      tema.cores.grafite,
     fontSize: "16px",
-    },
+  },
 
-    totalMontagem: {
-    marginTop: "20px",
+  totalMontagem: {
+    marginTop: "22px",
     padding: "18px",
-    background: "#111827",
-    color: "#ffffff",
-    borderRadius: "8px",
+    background: "#FFF7ED",
+    color:
+      tema.cores.grafite,
+    border:
+      `2px solid ${tema.cores.laranja}`,
+    borderRadius:
+      tema.bordas.pequena,
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
-    fontSize: "16px",
-    },
-    confirmacaoMontagem: {
-    marginTop: "20px",
-    paddingTop: "20px",
-    borderTop: "1px solid #e5e7eb",
+    gap: "20px",
+    fontSize: "15px",
+  },
+
+  confirmacaoMontagem: {
+    marginTop: "22px",
+    paddingTop: "22px",
+    borderTop:
+      `1px solid ${tema.cores.borda}`,
     display: "flex",
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent:
+      "flex-end",
     gap: "15px",
-    },
+  },
 
-    botaoConfirmar: {
-    background: "#111827",
-    color: "#ffffff",
+  botaoConfirmar: {
+    minWidth: "180px",
+    height: "44px",
+    padding: "0 20px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
     border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
-    cursor: "pointer",
-    },
-
-    sucessoConfirmacao: {
-    marginRight: "auto",
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
-    borderRadius: "6px",
-    padding: "11px 14px",
+    borderRadius:
+      tema.bordas.pequena,
     fontSize: "13px",
-    fontWeight: 600,
-    },
-
-    botaoContinuar: {
-    background: "#111827",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "6px",
-    padding: "12px 18px",
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: "pointer",
-    },
+  },
+
+  sucessoConfirmacao: {
+    marginRight: "auto",
+    background: "#F0FDF4",
+    color: "#15803D",
+    border:
+      "1px solid #BBF7D0",
+    borderRadius:
+      tema.bordas.pequena,
+    padding: "11px 14px",
+    fontSize: "12px",
+    fontWeight: 600,
+  },
+
+  botaoContinuar: {
+    minWidth: "220px",
+    height: "44px",
+    padding: "0 20px",
+    background:
+      tema.cores.laranja,
+    color:
+      tema.cores.branco,
+    border: "none",
+    borderRadius:
+      tema.bordas.pequena,
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
 };
