@@ -64,27 +64,6 @@ async function editar(req, res) {
   }
 }
 
-async function editar(req, res) {
-  try {
-    const cliente =
-      await clienteEmpresaServico
-        .editarClienteEmpresa(
-          req.params.id,
-          req.body
-        );
-
-    return res.status(200).json({
-      mensagem:
-        "Empresa cliente atualizada com sucesso!",
-      cliente,
-    });
-  } catch (erro) {
-    return res.status(400).json({
-      erro: erro.message,
-    });
-  }
-}
-
 async function excluir(req, res) {
   try {
     const resultado =
