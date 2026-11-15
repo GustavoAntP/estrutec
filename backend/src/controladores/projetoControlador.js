@@ -1,0 +1,129 @@
+const projetoServico = require("../servicos/projetoServico");
+
+async function cadastrar(req, res) {
+  try {
+    const projeto = await projetoServico.cadastrarProjeto(
+      req.body,
+      req.usuario.id
+    );
+
+    return res.status(201).json({
+      mensagem: "Projeto cadastrado com sucesso!",
+      projeto,
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function listar(req, res) {
+  try {
+    const filtros = {
+      busca: req.query.busca,
+      clienteEmpresaId:
+        req.query.clienteEmpresaId,
+      status: req.query.status,
+    };
+
+    const projetos =
+      await projetoServico.listarProjetos(
+        req.usuarioId,
+        filtros
+      );
+
+    return res.json({ projetos });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function buscarPorId(req, res) {
+  try {
+    const projeto = await projetoServico.buscarProjetoPorId(
+      req.params.id,
+      req.usuario.id
+    );
+
+    return res.status(200).json({
+      projeto,
+    });
+  } catch (erro) {
+    return res.status(404).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function atualizar(req, res) {
+  try {
+    const projeto = await projetoServico.atualizarProjeto(
+      req.params.id,
+      req.body,
+      req.usuario.id
+    );
+
+    return res.status(200).json({
+      mensagem: "Projeto atualizado com sucesso!",
+      projeto,
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function excluir(req, res) {
+  try {
+    await projetoServico.excluirProjeto(
+      req.params.id,
+      req.usuario.id
+    );
+
+    return res.status(200).json({
+      mensagem: "Projeto excluído com sucesso!",
+    });
+  } catch (erro) {
+    return res.status(404).json({
+      erro: erro.message,
+    });
+  }
+}
+
+async function reabrir(req, res) {
+  try {
+    const projeto =
+      await projetoServico.reabrirProjeto(
+        req.params.id,
+        req.usuario.id
+      );
+
+    return res.status(200).json({
+      mensagem:
+        "Projeto reaberto com sucesso!",
+      projeto: {
+        id: projeto.id,
+        codigo: projeto.codigo,
+        nome: projeto.nome,
+        status: projeto.status,
+      },
+    });
+  } catch (erro) {
+    return res.status(400).json({
+      erro: erro.message,
+    });
+  }
+}
+
+module.exports = {
+  cadastrar,
+  listar,
+  buscarPorId,
+  atualizar,
+  excluir,
+  reabrir,
+};
