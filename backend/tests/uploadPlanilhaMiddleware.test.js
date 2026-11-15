@@ -39,20 +39,18 @@ describe("Seguranca no upload de planilhas", () => {
     expect(resposta.body.nome).toBe("planilha.xlsx");
   });
 
-  test("deve rejeitar arquivos maiores que 25 MB com HTTP 413", async () => {
-    const arquivoGrande = Buffer.alloc(
-      25 * 1024 * 1024 + 1
-    );
+test("deve rejeitar arquivos maiores que 8 MB com HTTP 413", async () => {
+  const arquivoGrande = Buffer.alloc(8_000_001);
 
-    const resposta = await request(app)
-      .post("/projetos/1/importar-planilha")
-      .attach("arquivo", arquivoGrande, "planilha.xlsx");
+  const resposta = await request(app)
+    .post("/projetos/1/importar-planilha")
+    .attach("arquivo", arquivoGrande, "planilha.xlsx");
 
-    expect(resposta.status).toBe(413);
-    expect(resposta.body.erro).toBe(
-      "O arquivo excede o tamanho máximo permitido de 25 MB."
-    );
-  });
+  expect(resposta.status).toBe(413);
+  expect(resposta.body.erro).toBe(
+    "O arquivo excede o tamanho máximo permitido de 8 MB."
+  );
+});
 
   test("deve rejeitar arquivos que nao sejam XLSX", async () => {
     const arquivo = Buffer.from("Arquivo invalido");

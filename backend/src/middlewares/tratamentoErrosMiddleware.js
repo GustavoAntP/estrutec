@@ -4,7 +4,7 @@ const tratamentoErrosMiddleware = (erro, req, res, next) => {
   if (erro instanceof multer.MulterError) {
     if (erro.code === "LIMIT_FILE_SIZE") {
       return res.status(413).json({
-        erro: "O arquivo excede o tamanho máximo permitido de 25 MB.",
+        erro: "O arquivo excede o tamanho máximo permitido de 8 MB.",
       });
     }
 
