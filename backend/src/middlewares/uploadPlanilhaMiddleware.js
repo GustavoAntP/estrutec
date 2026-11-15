@@ -21,7 +21,7 @@ const uploadPlanilha = multer({
   storage: armazenamento,
   fileFilter: filtroArquivo,
   limits: {
-    fileSize: 25 * 1024 * 1024,
+    fileSize: 8_000_000,
     files: 1,
   },
 });
