@@ -1,8 +1,10 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const tratamentoErrosMiddleware = require("./middlewares/tratamentoErrosMiddleware");
 
 if (!process.env.JWT_SECRET) {
   throw new Error(
@@ -12,7 +14,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const sequelize = require("./configuracoes/banco");
-// Modelos
+
 const Usuario = require("./modelos/Usuario");
 const Projeto = require("./modelos/Projeto");
 const ElementoProjeto = require("./modelos/ElementoProjeto");
@@ -24,19 +26,18 @@ const LogisticaPropria = require("./modelos/LogisticaPropria");
 const MontagemProjeto = require("./modelos/MontagemProjeto");
 const EquipamentoMontagem = require("./modelos/EquipamentoMontagem");
 const EquipeMontagem = require("./modelos/EquipeMontagem");
-const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
 const ClienteEmpresa = require("./modelos/ClienteEmpresa");
 const Transportadora = require("./modelos/Transportadora");
 const Equipamento = require("./modelos/Equipamento");
 const Equipe = require("./modelos/Equipe");
 const ConfiguracaoFabricacaoPadrao = require("./modelos/ConfiguracaoFabricacaoPadrao");
 const CavaloMecanico = require("./modelos/CavaloMecanico");
-const Carreta =  require("./modelos/Carreta");
+const Carreta = require("./modelos/Carreta");
 
-// Rotas
 const usuarioRotas = require("./rotas/usuarioRotas");
 const authRotas = require("./rotas/authRotas");
 const projetoRotas = require("./rotas/projetoRotas");
+const recuperacaoSenhaRotas = require("./rotas/recuperacaoSenhaRotas");
 const clienteEmpresaRotas = require("./rotas/clienteEmpresaRotas");
 const transportadoraRotas = require("./rotas/transportadoraRotas");
 const equipamentoRotas = require("./rotas/equipamentoRotas");
@@ -57,7 +58,6 @@ app.use(
 
 app.use(express.json());
 
-// Protecao contra forca bruta nas rotas de autenticacao
 const limiteAutenticacao = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -69,18 +69,23 @@ const limiteAutenticacao = rateLimit({
 });
 
 app.use("/auth", limiteAutenticacao);
+
 app.use("/usuarios", usuarioRotas);
 app.use("/auth", authRotas);
 app.use("/projetos", projetoRotas);
-app.use("/auth",recuperacaoSenhaRotas);
+app.use("/auth", recuperacaoSenhaRotas);
 app.use("/clientes", clienteEmpresaRotas);
 app.use("/transportadoras", transportadoraRotas);
 app.use("/equipamentos", equipamentoRotas);
 app.use("/equipes", equipeRotas);
-app.use("/configuracoes/fabricacao-padrao", configuracaoFabricacaoPadraoRotas);
+
+app.use(
+  "/configuracoes/fabricacao-padrao",
+  configuracaoFabricacaoPadraoRotas
+);
+
 app.use("/cavalos-mecanicos", cavaloMecanicoRotas);
 app.use("/carretas", carretaRotas);
-
 
 app.get("/", (req, res) => {
   res.json({
@@ -88,28 +93,18 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use((erro, req, res, proximo) => {
-  if (erro.name === "MulterError" || erro.status === 400) {
-    return res.status(400).json({
-      erro: erro.message,
-    });
-  }
-
-  console.error("Erro nao tratado:", erro);
-
-  res.status(500).json({
-    erro: "Erro interno do servidor.",
-  });
-});
+app.use(tratamentoErrosMiddleware);
 
 const PORTA = process.env.PORT || 3001;
 
 async function iniciarServidor() {
   try {
     await sequelize.authenticate();
+
     console.log("Conexão com o PostgreSQL realizada com sucesso!");
 
     await sequelize.sync();
+
     console.log("Tabelas sincronizadas com sucesso!");
 
     app.listen(PORTA, () => {
