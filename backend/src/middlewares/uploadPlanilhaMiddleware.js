@@ -20,9 +20,10 @@ const filtroArquivo = (req, arquivo, callback) => {
 const uploadPlanilha = multer({
   storage: armazenamento,
   fileFilter: filtroArquivo,
-  /*limits: {
-    fileSize: 10 * 1024 * 1024,
-  },*/
+  limits: {
+    fileSize: 25 * 1024 * 1024,
+    files: 1,
+  },
 });
 
 module.exports = uploadPlanilha;
