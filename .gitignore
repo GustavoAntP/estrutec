@@ -18,3 +18,4 @@ Thumbs.db
 
 # Cobertura de testes
 backend/coverage/
+frontend/coverage/
