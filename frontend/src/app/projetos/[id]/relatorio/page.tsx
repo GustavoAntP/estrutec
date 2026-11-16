@@ -36,7 +36,7 @@ export default function RelatorioPage() {
     useState("");
 
   useEffect(() => {
-    carregarRelatorio();
+    void carregarRelatorio();
 
     return () => {
       if (urlPdf) {

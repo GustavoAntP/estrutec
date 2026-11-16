@@ -373,16 +373,11 @@ async function gerarRelatorioFinal(
                   </td>
 
                   <td class="valor">
-                    ${
-                      material.precoUnitario !==
-                        undefined &&
-                      material.precoUnitario !==
-                        null
-                        ? formatarMoeda(
-                            material.precoUnitario
-                          )
-                        : "-"
-                    }
+                  ${
+                    material.precoUnitario != null
+                      ? formatarMoeda(material.precoUnitario)
+                      : "-"
+                  }
                   </td>
 
                   <td class="valor">

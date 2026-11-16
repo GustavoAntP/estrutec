@@ -64,7 +64,7 @@ export default function ResumoPage() {
     useState(false);
 
   useEffect(() => {
-    carregarResumo();
+    void carregarResumo();
   }, [id]);
 
   async function carregarResumo() {

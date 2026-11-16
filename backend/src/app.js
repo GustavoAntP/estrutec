@@ -116,4 +116,4 @@ async function iniciarServidor() {
   }
 }
 
-iniciarServidor();
+void iniciarServidor();

@@ -92,7 +92,7 @@ export default function NovoProjetoPage() {
   }
 
   useEffect(() => {
-    carregarClientesEmpresas();
+    void carregarClientesEmpresas();
   }, []);
 
   async function cadastrarProjeto(

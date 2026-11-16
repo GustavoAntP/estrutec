@@ -48,7 +48,7 @@ export default function ProjetoPage() {
     useState("");
 
   useEffect(() => {
-    carregarProjeto();
+    void carregarProjeto();
   }, [id]);
 
   async function carregarProjeto() {

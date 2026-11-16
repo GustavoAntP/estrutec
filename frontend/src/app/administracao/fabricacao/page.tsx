@@ -125,7 +125,7 @@ export default function ConfiguracaoFabricacaoPage() {
 
       setVerificandoAcesso(false);
 
-      carregarConfiguracao();
+      void carregarConfiguracao();
     } catch {
       localStorage.removeItem(
         "estrutec_token"

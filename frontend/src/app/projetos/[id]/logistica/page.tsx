@@ -159,12 +159,12 @@ export default function LogisticaPage() {
   const [carregandoCadastrosFrota, setCarregandoCadastrosFrota,] = useState(false);
 
   useEffect(() => {
-    carregarLogistica();
-    carregarFreteTerceirizado();
-    carregarFreteProprio();
-    carregarElementosSemPeso();
-    carregarTransportadoras();
-    carregarCadastrosFrota();
+    void carregarLogistica();
+    void carregarFreteTerceirizado();
+    void carregarFreteProprio();
+    void carregarElementosSemPeso();
+    void carregarTransportadoras();
+    void carregarCadastrosFrota();
   }, [id]);
 
   async function carregarLogistica() {
@@ -1901,7 +1901,7 @@ export default function LogisticaPage() {
                         <button
                             type="button"
                             onClick={() =>
-                            salvarPesoElemento(
+                            void salvarPesoElemento(
                                 elemento.id
                             )
                             }
