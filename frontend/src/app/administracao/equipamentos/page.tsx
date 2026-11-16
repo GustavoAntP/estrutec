@@ -103,7 +103,7 @@ export default function EquipamentosPage() {
       }
 
       setVerificandoAcesso(false);
-      carregarEquipamentos();
+      void carregarEquipamentos();
     } catch {
       localStorage.removeItem(
         "estrutec_token"

@@ -175,7 +175,7 @@ export default function ClientesPage() {
       }
 
       setVerificandoAcesso(false);
-      carregarClientes();
+      void carregarClientes();
     } catch {
       localStorage.removeItem(
         "estrutec_token"

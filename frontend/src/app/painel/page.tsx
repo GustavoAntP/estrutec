@@ -46,8 +46,8 @@ export default function PainelPage() {
   const [clientesEmpresas, setClientesEmpresas] = useState<ClienteEmpresa[]>([]);
 
   useEffect(() => {
-    carregarProjetos();
-    carregarClientesEmpresas();
+    void carregarProjetos();
+    void carregarClientesEmpresas();
   }, []);
 
   useEffect(() => {

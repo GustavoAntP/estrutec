@@ -378,7 +378,7 @@ export default function UsuariosPage() {
         }
 
         setVerificandoAcesso(false);
-        carregarUsuarios();
+        void carregarUsuarios();
     } catch {
         localStorage.removeItem(
         "estrutec_token"

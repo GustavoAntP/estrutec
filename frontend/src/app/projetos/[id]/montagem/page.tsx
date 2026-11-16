@@ -134,10 +134,10 @@ export default function MontagemPage() {
   const [carregandoCadastros, setCarregandoCadastros,] = useState(false);
 
   useEffect(() => {
-    carregarMontagem();
-    carregarEquipamentos();
-    carregarEquipes();
-    carregarCadastrosMontagem();
+    void carregarMontagem();
+    void carregarEquipamentos();
+    void carregarEquipes();
+    void carregarCadastrosMontagem();
   }, [id]);
 
   async function carregarMontagem() {

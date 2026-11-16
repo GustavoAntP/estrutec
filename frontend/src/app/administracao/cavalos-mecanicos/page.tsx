@@ -109,7 +109,7 @@ export default function CavalosMecanicosPage() {
         return;
       }
 
-      carregarCavalos();
+      void carregarCavalos();
     } catch {
       localStorage.removeItem(
         "estrutec_token"

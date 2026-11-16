@@ -100,8 +100,8 @@ export default function FabricacaoPage() {
   const [sucesso, setSucesso] = useState("");
 
   useEffect(() => {
-    carregarDadosFabricacao();
-    carregarElementos();
+    void carregarDadosFabricacao();
+    void carregarElementos();
   }, [id]);
 
   async function carregarDadosFabricacao() {

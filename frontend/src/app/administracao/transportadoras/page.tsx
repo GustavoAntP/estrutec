@@ -105,7 +105,7 @@ export default function TransportadorasPage() {
         return;
       }
 
-      carregarTransportadoras();
+      void carregarTransportadoras();
     } catch {
       localStorage.removeItem(
         "estrutec_token"
@@ -229,7 +229,7 @@ export default function TransportadorasPage() {
         3000
       );
 
-      carregarTransportadoras();
+      await carregarTransportadoras();
     } catch {
       setErro(
         "Não foi possível conectar ao servidor."
@@ -344,7 +344,7 @@ export default function TransportadorasPage() {
         3000
       );
 
-      carregarTransportadoras();
+      await carregarTransportadoras();
     } catch {
       setErro(
         "Não foi possível conectar ao servidor."
@@ -394,7 +394,7 @@ export default function TransportadorasPage() {
         3000
       );
 
-      carregarTransportadoras();
+      await carregarTransportadoras();
     } catch {
       setErro(
         "Não foi possível conectar ao servidor."

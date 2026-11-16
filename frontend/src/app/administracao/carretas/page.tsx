@@ -113,7 +113,7 @@ export default function CarretasPage() {
         return;
       }
 
-      carregarCarretas();
+      void carregarCarretas();
     } catch {
       localStorage.removeItem(
         "estrutec_token"

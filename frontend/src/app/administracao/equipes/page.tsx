@@ -101,7 +101,7 @@ export default function EquipesPage() {
       }
 
       setVerificandoAcesso(false);
-      carregarEquipes();
+      void carregarEquipes();
     } catch {
       localStorage.removeItem(
         "estrutec_token"
