@@ -7,14 +7,14 @@ import {
 
 import LogisticaPage from "@/app/projetos/[id]/logistica/page";
 
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
+import { apiAutenticada } from "@/servicos/api";
 
 import {
-  apiAutenticada,
-} from "@/servicos/api";
+  criarResposta,
+  configurarContextoDeTeste,
+} from "./apoioProjeto";
+
+// MOCKS
 
 jest.mock("next/navigation", () => ({
   useParams: jest.fn(),
@@ -38,33 +38,10 @@ const apiMock = apiAutenticada as jest.Mock;
 
 const pushMock = jest.fn();
 
-function criarResposta(
-  dados: unknown = {},
-  status = 200
-) {
-  return {
-    status,
-    ok: status >= 200 && status < 300,
-    json: jest.fn().mockResolvedValue(dados),
-  };
-}
+// CONFIGURAÇÃO DOS TESTES
 
 beforeEach(() => {
-  jest.resetAllMocks();
-
-  window.localStorage.clear();
-
-  (useParams as jest.Mock).mockReturnValue({
-    id: "7",
-  });
-
-  (useRouter as jest.Mock).mockReturnValue({
-    push: pushMock,
-  });
-
-  apiMock.mockImplementation(async () =>
-    criarResposta({}, 404)
-  );
+  configurarContextoDeTeste(apiMock, pushMock);
 });
 
 describe("Logistica - ESTRUTEC", () => {
