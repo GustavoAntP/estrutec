@@ -1,0 +1,104 @@
+name: ESTRUTEC - Integracao Continua
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  backend:
+    name: Backend - Testes e Cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      NODE_ENV: test
+      JWT_SECRET: chave-exclusiva-para-testes-automatizados-do-github-actions
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Executar testes Jest
+        run: npm test -- --coverage
+
+      - name: Salvar cobertura do backend
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cobertura-backend
+          path: backend/coverage/lcov.info
+          if-no-files-found: warn
+
+
+  frontend:
+    name: Frontend - Testes, Cobertura e Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_URL: "/api"
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Executar testes Jest
+        run: npm run test:coverage
+
+      - name: Verificar build de producao
+        run: npm run build
+
+      - name: Salvar cobertura do frontend
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cobertura-frontend
+          path: frontend/coverage/lcov.info
+          if-no-files-found: warn
