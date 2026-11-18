@@ -4,12 +4,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
 
 import MontagemPage from "@/app/projetos/[id]/montagem/page";
 
