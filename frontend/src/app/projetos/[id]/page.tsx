@@ -351,6 +351,23 @@ export default function ProjetoPage() {
     </header>
 
       <section style={estilos.conteudo}>
+      {sucessoReabertura && (
+  <div
+    role="status"
+    style={{
+      marginBottom: "20px",
+      padding: "14px 18px",
+      background: "#DCFCE7",
+      color: "#166534",
+      border: "1px solid #BBF7D0",
+      borderRadius: "8px",
+      fontSize: "14px",
+      fontWeight: 600,
+    }}
+  >
+    {sucessoReabertura}
+  </div>
+)}
       <div style={estilos.topoProjeto}>
         <div>
           <span style={estilos.sobretitulo}>
@@ -745,6 +762,24 @@ export default function ProjetoPage() {
                 novamente.
               </span>
             </div>
+{erroReabertura && (
+  <div
+    role="alert"
+    style={{
+      marginTop: "16px",
+      marginBottom: "16px",
+      padding: "12px 16px",
+      background: "#FEE2E2",
+      color: "#991B1B",
+      border: "1px solid #FECACA",
+      borderRadius: "8px",
+      fontSize: "13px",
+      fontWeight: 600,
+    }}
+  >
+    {erroReabertura}
+  </div>
+)}
 
             <div style={estilos.acoesModal}>
               <button
