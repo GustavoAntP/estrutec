@@ -47,7 +47,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Executar testes Jest
         run: npm test -- --coverage
@@ -87,7 +87,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Executar testes Jest
         run: npm run test:coverage
@@ -139,7 +139,7 @@ jobs:
           echo "Relatorios de cobertura encontrados!"
 
       - name: Executar analise SonarQube Cloud
-        uses: SonarSource/sonarqube-scan-action@v8.5.0
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
