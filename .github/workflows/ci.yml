@@ -23,7 +23,7 @@ jobs:
 
   backend:
     name: Backend - Testes e Cobertura
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
 
     defaults:
@@ -53,7 +53,7 @@ jobs:
         run: npm test -- --coverage
 
       - name: Salvar cobertura do backend
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: cobertura-backend
@@ -63,7 +63,7 @@ jobs:
 
   frontend:
     name: Frontend - Testes, Cobertura e Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
 
     defaults:
@@ -96,9 +96,52 @@ jobs:
         run: npm run build
 
       - name: Salvar cobertura do frontend
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: cobertura-frontend
           path: frontend/coverage/lcov.info
           if-no-files-found: warn
+
+  sonarqube:
+    name: SonarQube Cloud - Analise de Qualidade
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    needs:
+      - backend
+      - frontend
+
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Baixar cobertura do backend
+        uses: actions/download-artifact@v8
+        with:
+          name: cobertura-backend
+          path: backend/coverage
+
+      - name: Baixar cobertura do frontend
+        uses: actions/download-artifact@v8
+        with:
+          name: cobertura-frontend
+          path: frontend/coverage
+
+      - name: Verificar arquivos de cobertura
+        run: |
+          test -f backend/coverage/lcov.info
+          test -f frontend/coverage/lcov.info
+          echo "Relatorios de cobertura encontrados!"
+
+      - name: Executar analise SonarQube Cloud
+        uses: SonarSource/sonarqube-scan-action@v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
