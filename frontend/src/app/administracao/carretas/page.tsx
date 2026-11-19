@@ -4,6 +4,7 @@ import {
   FormEvent,
   useEffect,
   useState,
+  useId,
 } from "react";
 
 import { useRouter } from "next/navigation";
@@ -998,6 +999,7 @@ export default function CarretasPage() {
                 }
               >
                 <label
+                  htmlFor="carreta-observacoes"
                   style={
                     estilos.label
                   }
@@ -1006,6 +1008,7 @@ export default function CarretasPage() {
                 </label>
 
                 <textarea
+                  id="carreta-observacoes"
                   value={observacoes}
                   onChange={(evento) =>
                     setObservacoes(
@@ -1073,15 +1076,19 @@ function Campo({
   step?: string;
   min?: string;
 }) {
+  const campoId = useId();
+
   return (
     <div style={estilos.campo}>
       <label
+        htmlFor={campoId}
         style={estilos.label}
       >
         {label}
       </label>
 
       <input
+        id={campoId}
         value={value}
         required={required}
         type={type}
